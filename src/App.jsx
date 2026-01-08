@@ -1,35 +1,54 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useMemo, useState } from "react";
+import { profile, posts } from "./data/profile";
+import TopBar from "./components/TopBar";
+import SideNav from "./components/SideNav";
+import BottomNav from "./components/BottomNav";
+import ProfilePage from "./pages/ProfilePage";
+import PostModal from "./components/PostModal";
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [active, setActive] = useState("profile"); // profile | projects | skills | contact
+  const [selectedPost, setSelectedPost] = useState(null);
+
+  const activeTitle = useMemo(() => {
+    switch (active) {
+      case "projects":
+        return "Projects";
+      case "skills":
+        return "Skills";
+      case "contact":
+        return "Contact";
+      default:
+        return "Profile";
+    }
+  }, [active]);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <div className="appShell">
+      {/* Desktop sidebar */}
+      <SideNav active={active} onChange={setActive} profile={profile} />
 
-export default App
+      {/* Main */}
+      <div className="mainArea">
+        {/* Mobile top bar */}
+        <TopBar title={activeTitle} username={profile.username} />
+
+        <main className="content">
+          <ProfilePage
+            profile={profile}
+            posts={posts}
+            active={active}
+            onChangeTab={setActive}
+            onOpenPost={setSelectedPost}
+          />
+        </main>
+
+        {/* Mobile bottom nav */}
+        <BottomNav active={active} onChange={setActive} />
+      </div>
+
+      {/* Post details modal */}
+      <PostModal post={selectedPost} onClose={() => setSelectedPost(null)} />
+    </div>
+  );
+}
