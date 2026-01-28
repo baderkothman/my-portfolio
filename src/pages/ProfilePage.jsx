@@ -1,5 +1,16 @@
 import React, { useMemo } from "react";
 import PostCard from "../components/PostCard";
+import ContactForm from "../components/ContactForm";
+
+function getHref(label, value) {
+  if (!value) return null;
+  const v = String(value).trim();
+
+  if (label.toLowerCase() === "email") return `mailto:${v}`;
+  if (v.startsWith("http://") || v.startsWith("https://")) return v;
+
+  return null;
+}
 
 export default function ProfilePage({
   profile,
@@ -9,6 +20,17 @@ export default function ProfilePage({
   onOpenPost,
 }) {
   const gridPosts = useMemo(() => posts, [posts]);
+
+  function goTo(tabKey, anchorId) {
+    onChangeTab(tabKey);
+    if (!anchorId) return;
+
+    // after React updates the DOM
+    requestAnimationFrame(() => {
+      const el = document.getElementById(anchorId);
+      el?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
 
   return (
     <div className="page">
@@ -24,20 +46,20 @@ export default function ProfilePage({
           <div className="profileRow1">
             <div className="profileName">{profile.username}</div>
             <div className="profileActions">
-              <a
+              <button
                 className="btnPrimary"
-                href="#contact"
-                onClick={() => onChangeTab("contact")}
+                type="button"
+                onClick={() => goTo("contact", "contact")}
               >
                 Contact
-              </a>
-              <a
+              </button>
+              <button
                 className="btnGhost"
-                href="#projects"
-                onClick={() => onChangeTab("projects")}
+                type="button"
+                onClick={() => goTo("projects", "projects")}
               >
                 View Projects
-              </a>
+              </button>
             </div>
           </div>
 
@@ -61,13 +83,27 @@ export default function ProfilePage({
                 <div key={idx}>{line}</div>
               ))}
             </div>
-            <div className="links">
-              {profile.links.map((l) => (
-                <div key={l.label} className="linkLine">
-                  <span className="linkLabel">{l.label}:</span>{" "}
-                  <span className="linkValue">{l.value}</span>
-                </div>
-              ))}
+            <div className="links" aria-label="Profile links">
+              {profile.links.map((l) => {
+                const href = getHref(l.label, l.value);
+                return (
+                  <div key={l.label} className="linkLine">
+                    <span className="linkLabel">{l.label}:</span>{" "}
+                    {href ? (
+                      <a
+                        className="linkValue linkAnchor"
+                        href={href}
+                        target={href.startsWith("http") ? "_blank" : undefined}
+                        rel="noreferrer"
+                      >
+                        {l.value}
+                      </a>
+                    ) : (
+                      <span className="linkValue">{l.value}</span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -89,24 +125,28 @@ export default function ProfilePage({
         <button
           className={`tab ${active === "profile" ? "active" : ""}`}
           onClick={() => onChangeTab("profile")}
+          type="button"
         >
           POSTS
         </button>
         <button
           className={`tab ${active === "projects" ? "active" : ""}`}
           onClick={() => onChangeTab("projects")}
+          type="button"
         >
           PROJECTS
         </button>
         <button
           className={`tab ${active === "skills" ? "active" : ""}`}
           onClick={() => onChangeTab("skills")}
+          type="button"
         >
           SKILLS
         </button>
         <button
           className={`tab ${active === "contact" ? "active" : ""}`}
           onClick={() => onChangeTab("contact")}
+          type="button"
         >
           CONTACT
         </button>
@@ -130,23 +170,44 @@ export default function ProfilePage({
         <section id="contact" className="card sectionPad">
           <h3 className="sectionTitle">Contact</h3>
           <p className="muted">
-            Replace the placeholders in <b>src/data/profile.js</b> with your
-            real links (GitHub, LinkedIn, email).
+            Fill the form below to reach me. It sends directly via EmailJS.
           </p>
-          <div className="contactGrid">
-            {profile.links.map((l) => (
-              <div className="contactItem" key={l.label}>
-                <div className="contactLabel">{l.label}</div>
-                <div className="contactValue">{l.value}</div>
-              </div>
-            ))}
+
+          <div className="contactGrid" aria-label="Contact links">
+            {profile.links.map((l) => {
+              const href = getHref(l.label, l.value);
+              return (
+                <div className="contactItem" key={l.label}>
+                  <div className="contactLabel">{l.label}</div>
+                  <div className="contactValue">
+                    {href ? (
+                      <a
+                        className="contactAnchor"
+                        href={href}
+                        target={href.startsWith("http") ? "_blank" : undefined}
+                        rel="noreferrer"
+                      >
+                        {l.value}
+                      </a>
+                    ) : (
+                      l.value
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="contactFormWrap">
+            <h4 className="sectionSubtitle">Send a message</h4>
+            <ContactForm />
           </div>
         </section>
       ) : null}
 
       {/* Posts grid (default + projects tab) */}
       {active !== "skills" && active !== "contact" ? (
-        <section className="postsGrid">
+        <section id="projects" className="postsGrid" aria-label="Projects grid">
           {gridPosts.map((p) => (
             <PostCard key={p.id} post={p} onOpen={onOpenPost} />
           ))}

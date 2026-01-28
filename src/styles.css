@@ -35,6 +35,40 @@ button {
     font: inherit;
 }
 
+/* Visible focus (WCAG-friendly) */
+a:focus-visible,
+button:focus-visible,
+.navItem:focus-visible,
+.bottomNavItem:focus-visible,
+.postCard:focus-visible,
+.btnPrimary:focus-visible,
+.btnGhost:focus-visible,
+.tab:focus-visible,
+.iconBtn:focus-visible {
+    outline: 3px solid rgba(0, 149, 246, 0.35);
+    outline-offset: 2px;
+}
+
+/* Skip to content (WCAG) */
+.skipLink {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 999;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--text);
+    box-shadow: var(--shadow);
+    transform: translateY(-200%);
+    transition: transform 0.15s ease;
+}
+
+.skipLink:focus {
+    transform: translateY(0);
+}
+
 /* Layout shell */
 .appShell {
     min-height: 100vh;
@@ -273,6 +307,11 @@ button {
     color: #fff;
 }
 
+.btnPrimary:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
 .btnGhost {
     background: var(--card);
 }
@@ -332,6 +371,11 @@ button {
 
 .linkValue {
     color: var(--muted);
+}
+
+.linkAnchor {
+    text-decoration: underline;
+    text-underline-offset: 2px;
 }
 
 /* Highlights */
@@ -409,6 +453,11 @@ button {
     font-size: 16px;
 }
 
+.sectionSubtitle {
+    margin: 16px 0 10px;
+    font-size: 14px;
+}
+
 .muted {
     color: var(--muted);
 }
@@ -451,6 +500,11 @@ button {
 .contactValue {
     margin-top: 6px;
     font-weight: 600;
+}
+
+.contactAnchor {
+    text-decoration: underline;
+    text-underline-offset: 2px;
 }
 
 /* Posts grid */
@@ -585,6 +639,19 @@ button {
     font-weight: 600;
 }
 
+.modalActions {
+    margin-top: 12px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.modalHint {
+    margin-top: 12px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
 .modalSection {
     margin-top: 14px;
 }
@@ -604,6 +671,68 @@ button {
 
 .bullets li {
     margin-bottom: 6px;
+}
+
+/* Contact Form */
+.contactFormWrap {
+    margin-top: 14px;
+}
+
+.contactForm {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.formRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.field label {
+    font-weight: 700;
+    font-size: 13px;
+}
+
+.field input,
+.field textarea {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    background: #fff;
+    color: var(--text);
+    outline: none;
+}
+
+.field input:focus-visible,
+.field textarea:focus-visible {
+    outline: 3px solid rgba(0, 149, 246, 0.35);
+    outline-offset: 2px;
+}
+
+.error {
+    color: #b00020;
+    font-size: 13px;
+}
+
+.formActions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.formStatus {
+    color: var(--muted);
+    font-size: 13px;
 }
 
 /* Mobile bottom nav */
@@ -684,6 +813,10 @@ button {
     }
 
     .contactGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .formRow {
         grid-template-columns: 1fr;
     }
 

@@ -9,9 +9,12 @@ export const profile = {
     "Recent work: geofencing dashboards + mobile apps, SaaS-style platforms, and admin panels.",
   ],
   links: [
-    { label: "GitHub", value: "github.com/baderkothman" },
-    { label: "LinkedIn", value: "linkedin.com/in/your-profile" },
-    { label: "Email", value: "youremail@example.com" },
+    { label: "GitHub", value: "https://github.com/baderkothman" },
+    {
+      label: "LinkedIn",
+      value: "https://www.linkedin.com/in/bader-othman-1a778127a/",
+    },
+    { label: "Email", value: "bader.k.othman@gmail.com" },
   ],
   highlights: [
     { title: "Design System", subtitle: "Tokens, dark/light" },
@@ -20,7 +23,7 @@ export const profile = {
     { title: "Dashboards", subtitle: "Admin panels" },
   ],
   stats: {
-    posts: 9,
+    posts: 6, // keep synced with posts array length
     projects: 6,
     years: "2+",
   },
@@ -47,6 +50,8 @@ export const posts = [
     caption:
       "Admin dashboard + Flutter apps. Circular zones, enter/exit alerts, logs, CSV export.",
     tags: ["Flutter", "Next.js", "SQL", "Maps"],
+    repoUrl: "", // TODO: paste repo link (required)
+    demoUrl: "", // optional
     details: [
       "Admin dashboard (web): user management, zones configuration, alerts + export.",
       "Mobile apps: user location tracking, zone detection UX, API-driven updates.",
@@ -61,6 +66,8 @@ export const posts = [
     caption:
       "Listings, images, subscription tiers, analytics-ready architecture and UI tokens.",
     tags: ["PHP", "MySQL", "UI/UX"],
+    repoUrl: "", // TODO
+    demoUrl: "", // optional
     details: [
       "SaaS mindset: Free/Pro/Agency tiers concept and scalable structure.",
       "Property CRUD + images, clean branding, reusable UI components.",
@@ -74,6 +81,8 @@ export const posts = [
     caption:
       "Planning a barcode-based inventory + sales workflow for a toy store.",
     tags: ["Systems", "DB Design"],
+    repoUrl: "", // TODO
+    demoUrl: "", // optional
     details: [
       "Barcode scan -> product lookup -> cart -> receipt.",
       "Inventory import, stock adjustments, sales reports and auditing.",
@@ -87,6 +96,8 @@ export const posts = [
     caption:
       "Consistent light/dark tokens, typography, spacing, and component patterns.",
     tags: ["Design System", "CSS"],
+    repoUrl: "", // TODO
+    demoUrl: "", // optional
     details: [
       "HSL/variable-based palette approach for maintainability.",
       "Layout consistency: radii, shadows, spacing scale, responsive rules.",
@@ -100,6 +111,8 @@ export const posts = [
     caption:
       "Clean API client patterns, cookie/session handling, environment-based URLs.",
     tags: ["APIs", "Architecture"],
+    repoUrl: "", // TODO
+    demoUrl: "", // optional
     details: [
       "Separation of concerns: config, API client, models, and screens.",
       "Safe defaults for emulator/device networking setups.",
@@ -113,39 +126,13 @@ export const posts = [
     caption:
       "Exploring lesson/game structure inside Unity with web delivery considerations.",
     tags: ["Unity", "Learning"],
+    repoUrl: "", // TODO
+    demoUrl: "", // optional
     details: [
       "Lesson progression, modular scenes, user progress tracking concept.",
       "Performance tradeoffs and lightweight alternatives evaluation.",
     ],
     metrics: ["Modular lessons", "Progress-first planning"],
     coverEmoji: "📚",
-  },
-  // extra to make the grid feel “alive”
-  {
-    id: "extra-1",
-    title: "Build Notes",
-    caption: "Practical debugging + shipping mindset.",
-    tags: ["Dev"],
-    details: ["Logs, fixes, iterations."],
-    metrics: ["Iteration speed"],
-    coverEmoji: "🛠️",
-  },
-  {
-    id: "extra-2",
-    title: "Design QA",
-    caption: "Spacing, contrast, responsiveness checks.",
-    tags: ["UI"],
-    details: ["Consistency + clarity."],
-    metrics: ["Cleaner UI"],
-    coverEmoji: "✅",
-  },
-  {
-    id: "extra-3",
-    title: "Docs & READMEs",
-    caption: "Clear documentation for handoff and reuse.",
-    tags: ["Docs"],
-    details: ["Structure + setup steps."],
-    metrics: ["Easier onboarding"],
-    coverEmoji: "📝",
   },
 ];

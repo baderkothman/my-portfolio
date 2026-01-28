@@ -25,6 +25,11 @@ export default function App() {
 
   return (
     <div className="appShell">
+      {/* Skip link for keyboard users */}
+      <a className="skipLink" href="#main">
+        Skip to content
+      </a>
+
       {/* Desktop sidebar */}
       <SideNav active={active} onChange={setActive} profile={profile} />
 
@@ -33,7 +38,7 @@ export default function App() {
         {/* Mobile top bar */}
         <TopBar title={activeTitle} username={profile.username} />
 
-        <main className="content">
+        <main id="main" className="content" tabIndex={-1}>
           <ProfilePage
             profile={profile}
             posts={posts}
