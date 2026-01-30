@@ -1,5 +1,4 @@
 /* eslint-disable no-unused-vars */
-import React from "react";
 import { User, Briefcase, Layers, Mail } from "lucide-react";
 
 const navItems = [

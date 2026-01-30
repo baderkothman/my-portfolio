@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { profile, posts } from "./data/profile";
 import TopBar from "./components/TopBar";
 import SideNav from "./components/SideNav";

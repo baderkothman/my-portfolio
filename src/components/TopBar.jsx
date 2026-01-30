@@ -1,4 +1,3 @@
-import React from "react";
 import { Github, Mail, MoreHorizontal } from "lucide-react";
 
 function getLink(links, label) {

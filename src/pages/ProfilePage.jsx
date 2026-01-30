@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import PostCard from "../components/PostCard";
 import ContactForm from "../components/ContactForm";
 

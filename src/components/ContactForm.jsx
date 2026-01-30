@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import emailjs from "@emailjs/browser";
 
 function isEmail(v) {
