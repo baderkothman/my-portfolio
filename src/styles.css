@@ -1,13 +1,30 @@
 :root {
-    --bg: #fafafa;
+    /* Microsoft 365 / Fluent neutrals */
+    --bg: #f3f2f1;
     --card: #ffffff;
-    --text: #262626;
-    --muted: #737373;
-    --border: #dbdbdb;
-    --accent: #0095f6;
-    --shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
-    --radius: 14px;
-    --max: 980px;
+    --text: #1f1f1f;
+    --muted: #605e5c;
+    --border: #edebe9;
+
+    /* Fluent primary */
+    --accent: #0078d4;
+    --accentHover: #106ebe;
+    --accentSoft: rgba(0, 120, 212, 0.12);
+
+    /* Office spectrum (used for accents only) */
+    --ms-word: #185abd;
+    --ms-excel: #217346;
+    --ms-powerpoint: #d24726;
+    --ms-onenote: #7719aa;
+    --ms-outlook: #0078d4;
+
+    /* Effects */
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 12px 28px rgba(0, 0, 0, 0.08);
+    --radius: 12px;
+    --max: 1040px;
+
+    /* Focus */
+    --focus: rgba(0, 120, 212, 0.45);
 }
 
 * {
@@ -21,7 +38,8 @@ body {
 
 body {
     margin: 0;
-    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue";
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial,
+        "Noto Sans", "Helvetica Neue";
     background: var(--bg);
     color: var(--text);
 }
@@ -35,7 +53,7 @@ button {
     font: inherit;
 }
 
-/* Visible focus (WCAG-friendly) */
+/* WCAG focus */
 a:focus-visible,
 button:focus-visible,
 .navItem:focus-visible,
@@ -44,12 +62,23 @@ button:focus-visible,
 .btnPrimary:focus-visible,
 .btnGhost:focus-visible,
 .tab:focus-visible,
-.iconBtn:focus-visible {
-    outline: 3px solid rgba(0, 149, 246, 0.35);
+.iconBtn:focus-visible,
+.field input:focus-visible,
+.field textarea:focus-visible {
+    outline: 3px solid var(--focus);
     outline-offset: 2px;
 }
 
-/* Skip to content (WCAG) */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Skip link */
 .skipLink {
     position: absolute;
     top: 10px;
@@ -69,7 +98,7 @@ button:focus-visible,
     transform: translateY(0);
 }
 
-/* Layout shell */
+/* Layout */
 .appShell {
     min-height: 100vh;
     display: grid;
@@ -93,6 +122,7 @@ button:focus-visible,
     gap: 18px;
 }
 
+/* Brand */
 .sideBrand {
     display: flex;
     align-items: center;
@@ -105,14 +135,20 @@ button:focus-visible,
     height: 34px;
     border: 1px solid var(--border);
     border-radius: 10px;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: var(--card);
+    background: conic-gradient(from 180deg,
+            var(--ms-word),
+            var(--ms-excel),
+            var(--ms-powerpoint),
+            var(--ms-onenote),
+            var(--ms-outlook));
 }
 
 .sideBrandText {
-    font-weight: 700;
+    font-weight: 900;
+    letter-spacing: 0.2px;
 }
 
 .sideNavLinks {
@@ -131,6 +167,7 @@ button:focus-visible,
     background: transparent;
     cursor: pointer;
     text-align: left;
+    color: var(--text);
 }
 
 .navItem:hover {
@@ -138,8 +175,13 @@ button:focus-visible,
 }
 
 .navItem.active {
-    background: rgba(0, 149, 246, 0.10);
-    border-color: rgba(0, 149, 246, 0.25);
+    background: var(--accentSoft);
+    border-color: rgba(0, 120, 212, 0.22);
+}
+
+.navItem svg {
+    flex: 0 0 auto;
+    display: block;
 }
 
 .sideFooter {
@@ -164,7 +206,6 @@ button:focus-visible,
     max-width: var(--max);
     margin: 0 auto;
     padding: 18px 16px 90px;
-    /* leave room for bottom nav on mobile */
 }
 
 /* Mobile top bar */
@@ -173,7 +214,8 @@ button:focus-visible,
     position: sticky;
     top: 0;
     z-index: 10;
-    background: var(--bg);
+    background: rgba(243, 242, 241, 0.85);
+    backdrop-filter: blur(8px);
     border-bottom: 1px solid var(--border);
 }
 
@@ -191,8 +233,8 @@ button:focus-visible,
 .brand {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-weight: 800;
+    gap: 10px;
+    font-weight: 900;
 }
 
 .brandMark {
@@ -203,22 +245,55 @@ button:focus-visible,
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: var(--card);
+    background: conic-gradient(from 180deg,
+            var(--ms-word),
+            var(--ms-excel),
+            var(--ms-powerpoint),
+            var(--ms-onenote),
+            var(--ms-outlook));
 }
 
 .topBarTitle {
-    font-weight: 700;
+    font-weight: 800;
     color: var(--muted);
-    font-size: 14px;
+    font-size: 13px;
 }
 
+.topBarActions {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Fix for your screenshot: center icons + remove baseline issues */
 .iconBtn {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     border-radius: 12px;
     border: 1px solid var(--border);
     background: var(--card);
     cursor: pointer;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    color: var(--muted);
+    padding: 0;
+    line-height: 0;
+}
+
+.iconBtn svg {
+    display: block;
+}
+
+.iconBtn:hover {
+    background: rgba(0, 0, 0, 0.03);
+    color: var(--text);
+}
+
+.iconBtn:active {
+    transform: translateY(1px);
 }
 
 /* Card */
@@ -248,8 +323,13 @@ button:focus-visible,
     height: 120px;
     border-radius: 999px;
     padding: 3px;
-    background: radial-gradient(circle at top left, rgba(0, 149, 246, 0.35), rgba(0, 0, 0, 0));
-    border: 1px solid rgba(0, 149, 246, 0.25);
+    background: conic-gradient(from 180deg,
+            var(--ms-word),
+            var(--ms-excel),
+            var(--ms-powerpoint),
+            var(--ms-onenote),
+            var(--ms-outlook));
+    border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .avatar {
@@ -257,12 +337,13 @@ button:focus-visible,
     height: 100%;
     border-radius: 999px;
     border: 1px solid var(--border);
-    background: linear-gradient(180deg, #fff, #f7f7f7);
+    background: linear-gradient(180deg, #ffffff, #faf9f8);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 44px;
-    font-weight: 800;
+    font-weight: 900;
+    letter-spacing: -0.5px;
 }
 
 .profileMeta {
@@ -280,13 +361,14 @@ button:focus-visible,
 }
 
 .profileName {
-    font-size: 20px;
-    font-weight: 700;
+    font-size: 18px;
+    font-weight: 900;
 }
 
 .profileActions {
     display: flex;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 .btnPrimary,
@@ -294,17 +376,27 @@ button:focus-visible,
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
     padding: 8px 12px;
     border-radius: 10px;
     border: 1px solid var(--border);
     cursor: pointer;
-    font-weight: 600;
+    font-weight: 800;
+}
+
+.btnPrimary svg,
+.btnGhost svg {
+    display: block;
 }
 
 .btnPrimary {
     background: var(--accent);
-    border-color: rgba(0, 149, 246, 0.35);
+    border-color: rgba(0, 120, 212, 0.35);
     color: #fff;
+}
+
+.btnPrimary:hover {
+    background: var(--accentHover);
 }
 
 .btnPrimary:disabled {
@@ -314,6 +406,11 @@ button:focus-visible,
 
 .btnGhost {
     background: var(--card);
+    color: var(--text);
+}
+
+.btnGhost:hover {
+    background: rgba(0, 0, 0, 0.03);
 }
 
 .statsRow {
@@ -337,7 +434,7 @@ button:focus-visible,
 }
 
 .realName {
-    font-weight: 700;
+    font-weight: 900;
 }
 
 .title {
@@ -345,7 +442,6 @@ button:focus-visible,
 }
 
 .bio {
-    color: var(--text);
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -364,7 +460,7 @@ button:focus-visible,
 }
 
 .linkLabel {
-    font-weight: 700;
+    font-weight: 900;
     color: var(--text);
     margin-right: 6px;
 }
@@ -378,68 +474,38 @@ button:focus-visible,
     text-underline-offset: 2px;
 }
 
-/* Highlights */
-.highlights {
-    margin-top: 12px;
-    padding: 14px;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-}
-
-.highlight {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    text-align: center;
-}
-
-.highlightCircle {
-    width: 62px;
-    height: 62px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    background: linear-gradient(180deg, #fff, #f6f6f6);
-}
-
-.highlightTitle {
-    font-weight: 700;
-    font-size: 13px;
-}
-
-.highlightSub {
-    color: var(--muted);
-    font-size: 12px;
-}
-
-/* Tabs */
+/* Tabs (GitHub-like underline) */
 .tabs {
     margin-top: 12px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 10px;
+    justify-content: flex-start;
+    gap: 18px;
+    padding: 10px 12px;
     overflow: auto;
+    border-bottom: 1px solid var(--border);
+    background: var(--card);
+    border-radius: var(--radius);
 }
 
 .tab {
-    border: 1px solid transparent;
+    border: none;
     background: transparent;
     color: var(--muted);
-    padding: 8px 12px;
-    border-radius: 999px;
+    padding: 10px 2px;
     cursor: pointer;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    font-size: 12px;
+    font-weight: 900;
+    font-size: 13px;
+    border-bottom: 2px solid transparent;
+}
+
+.tab:hover {
+    color: var(--text);
 }
 
 .tab.active {
     color: var(--text);
-    background: rgba(0, 0, 0, 0.03);
-    border-color: var(--border);
+    border-bottom-color: var(--accent);
 }
 
 /* Sections */
@@ -451,11 +517,13 @@ button:focus-visible,
 .sectionTitle {
     margin: 0 0 10px;
     font-size: 16px;
+    font-weight: 900;
 }
 
 .sectionSubtitle {
     margin: 16px 0 10px;
     font-size: 14px;
+    font-weight: 900;
 }
 
 .muted {
@@ -470,13 +538,22 @@ button:focus-visible,
 
 .chip {
     border: 1px solid var(--border);
-    background: #fff;
+    background: #ffffff;
     padding: 6px 10px;
     border-radius: 999px;
     font-size: 13px;
     color: var(--muted);
+
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
+.chip svg {
+    display: block;
+}
+
+/* Contact grid */
 .contactGrid {
     margin-top: 12px;
     display: grid;
@@ -487,19 +564,19 @@ button:focus-visible,
 .contactItem {
     border: 1px solid var(--border);
     border-radius: 12px;
-    background: #fff;
+    background: #ffffff;
     padding: 12px;
 }
 
 .contactLabel {
-    font-weight: 800;
+    font-weight: 900;
     font-size: 12px;
     color: var(--muted);
 }
 
 .contactValue {
     margin-top: 6px;
-    font-weight: 600;
+    font-weight: 800;
 }
 
 .contactAnchor {
@@ -507,12 +584,12 @@ button:focus-visible,
     text-underline-offset: 2px;
 }
 
-/* Posts grid */
+/* Posts grid (Instagram-ish tiles, but Fluent look) */
 .postsGrid {
     margin-top: 12px;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
 }
 
 .postCard {
@@ -523,11 +600,17 @@ button:focus-visible,
 }
 
 .postCardInner {
-    border-radius: 10px;
+    border-radius: 12px;
     overflow: hidden;
     border: 1px solid var(--border);
-    background: #fff;
+    background: #ffffff;
     aspect-ratio: 1 / 1;
+    transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+.postCard:hover .postCardInner {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
 }
 
 .postCover {
@@ -536,10 +619,21 @@ button:focus-visible,
     display: flex;
     align-items: center;
     justify-content: center;
+    background: linear-gradient(180deg, #ffffff, #faf9f8);
 }
 
-.postEmoji {
-    font-size: 44px;
+.postIcon {
+    color: var(--muted);
+}
+
+.postCard:hover .postIcon {
+    color: var(--text);
+}
+
+/* No emoji UI at all */
+.postEmoji,
+.modalEmoji {
+    display: none !important;
 }
 
 /* Modal */
@@ -564,12 +658,13 @@ button:focus-visible,
     z-index: 60;
     width: min(980px, 100%);
     height: min(620px, 92vh);
-    background: #fff;
+    background: #ffffff;
     border-radius: 16px;
     overflow: hidden;
     display: grid;
     grid-template-columns: 1.2fr 1fr;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.25);
 }
 
 .modalClose {
@@ -583,10 +678,26 @@ button:focus-visible,
     background: #fff;
     cursor: pointer;
     z-index: 70;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    color: var(--muted);
+    padding: 0;
+}
+
+.modalClose svg {
+    display: block;
+}
+
+.modalClose:hover {
+    background: rgba(0, 0, 0, 0.03);
+    color: var(--text);
 }
 
 .modalLeft {
-    background: #f7f7f7;
+    background: #faf9f8;
     border-right: 1px solid var(--border);
     display: flex;
 }
@@ -598,8 +709,8 @@ button:focus-visible,
     justify-content: center;
 }
 
-.modalEmoji {
-    font-size: 80px;
+.modalIcon {
+    color: var(--muted);
 }
 
 .modalRight {
@@ -615,7 +726,7 @@ button:focus-visible,
 
 .modalTitle {
     font-size: 18px;
-    font-weight: 800;
+    font-weight: 900;
 }
 
 .modalTags {
@@ -630,13 +741,13 @@ button:focus-visible,
     border-radius: 999px;
     border: 1px solid var(--border);
     color: var(--muted);
-    background: #fff;
+    background: #ffffff;
 }
 
 .modalCaption {
     margin-top: 10px;
     color: var(--text);
-    font-weight: 600;
+    font-weight: 800;
 }
 
 .modalActions {
@@ -661,7 +772,7 @@ button:focus-visible,
     color: var(--muted);
     font-weight: 900;
     text-transform: uppercase;
-    letter-spacing: .6px;
+    letter-spacing: 0.6px;
 }
 
 .bullets {
@@ -698,7 +809,7 @@ button:focus-visible,
 }
 
 .field label {
-    font-weight: 700;
+    font-weight: 900;
     font-size: 13px;
 }
 
@@ -707,15 +818,9 @@ button:focus-visible,
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 10px 12px;
-    background: #fff;
+    background: #ffffff;
     color: var(--text);
     outline: none;
-}
-
-.field input:focus-visible,
-.field textarea:focus-visible {
-    outline: 3px solid rgba(0, 149, 246, 0.35);
-    outline-offset: 2px;
 }
 
 .error {
@@ -743,26 +848,95 @@ button:focus-visible,
     left: 0;
     right: 0;
     height: 56px;
-    background: var(--bg);
+    background: rgba(243, 242, 241, 0.92);
+    backdrop-filter: blur(8px);
     border-top: 1px solid var(--border);
     z-index: 20;
     padding-bottom: env(safe-area-inset-bottom);
+
+    align-items: center;
 }
 
 .bottomNavItem {
-    width: 25%;
+    flex: 1;
     height: 56px;
     border: none;
     background: transparent;
     cursor: pointer;
     color: var(--muted);
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bottomNavItem svg {
+    display: block;
 }
 
 .bottomNavItem.active {
     color: var(--text);
 }
 
-/* Responsive: switch to mobile layout */
+/* Modal link panel (GitHub-ish) */
+.linkPanel {
+    margin-top: 10px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #ffffff;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.linkRow {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.linkRowLeft {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    color: var(--muted);
+    min-width: 240px;
+}
+
+.linkRowLeft svg {
+    display: block;
+    margin-top: 2px;
+}
+
+.linkRowText {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.linkRowTitle {
+    font-weight: 900;
+    color: var(--text);
+    font-size: 13px;
+}
+
+.linkRowValue {
+    font-size: 13px;
+    color: var(--muted);
+    word-break: break-word;
+    line-height: 1.35;
+}
+
+.linkRowActions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Responsive */
 @media (max-width: 900px) {
     .appShell {
         grid-template-columns: 1fr;
@@ -787,10 +961,6 @@ button:focus-visible,
     .profileHeader {
         grid-template-columns: 120px 1fr;
     }
-
-    .highlights {
-        grid-template-columns: repeat(4, 1fr);
-    }
 }
 
 @media (max-width: 640px) {
@@ -802,14 +972,9 @@ button:focus-visible,
         justify-content: flex-start;
     }
 
-    .highlights {
-        grid-template-columns: repeat(4, 1fr);
-        overflow: auto;
-    }
-
     .postsGrid {
         grid-template-columns: repeat(3, 1fr);
-        gap: 6px;
+        gap: 8px;
     }
 
     .contactGrid {

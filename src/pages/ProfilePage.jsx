@@ -1,14 +1,15 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import PostCard from "../components/PostCard";
 import ContactForm from "../components/ContactForm";
 
 function getHref(label, value) {
   if (!value) return null;
   const v = String(value).trim();
+  if (!v) return null;
 
-  if (label.toLowerCase() === "email") return `mailto:${v}`;
+  const lower = String(label || "").toLowerCase();
+  if (lower === "email") return `mailto:${v}`;
   if (v.startsWith("http://") || v.startsWith("https://")) return v;
-
   return null;
 }
 
@@ -19,72 +20,100 @@ export default function ProfilePage({
   onChangeTab,
   onOpenPost,
 }) {
-  const gridPosts = useMemo(() => posts, [posts]);
+  const allPosts = useMemo(() => posts || [], [posts]);
+  const pinned = useMemo(() => allPosts.slice(0, 6), [allPosts]);
+  const skillsPreview = useMemo(
+    () => (profile?.skills || []).slice(0, 10),
+    [profile],
+  );
 
-  function goTo(tabKey, anchorId) {
-    onChangeTab(tabKey);
-    if (!anchorId) return;
+  const tabs = [
+    { key: "profile", label: "Overview" },
+    { key: "projects", label: "Projects" },
+    { key: "skills", label: "Skills" },
+    { key: "contact", label: "Contact" },
+  ];
 
-    // after React updates the DOM
-    requestAnimationFrame(() => {
-      const el = document.getElementById(anchorId);
-      el?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  }
+  useEffect(() => {
+    const id =
+      active === "projects"
+        ? "projects"
+        : active === "contact"
+          ? "contact"
+          : "";
+    if (!id) return;
+
+    const t = window.setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 0);
+
+    return () => window.clearTimeout(t);
+  }, [active]);
 
   return (
     <div className="page">
-      {/* Profile header */}
-      <section className="profileHeader card">
+      <section className="profileHeader card" aria-label="Profile header">
         <div className="avatarWrap">
           <div className="avatarRing">
-            <div className="avatar">B</div>
+            <div className="avatar" aria-label="Profile avatar">
+              {profile?.name?.trim()?.[0]?.toUpperCase() || "B"}
+            </div>
           </div>
         </div>
 
         <div className="profileMeta">
           <div className="profileRow1">
-            <div className="profileName">{profile.username}</div>
+            <div className="profileName">{profile?.username}</div>
+
             <div className="profileActions">
               <button
                 className="btnPrimary"
                 type="button"
-                onClick={() => goTo("contact", "contact")}
+                onClick={() => onChangeTab("contact")}
               >
                 Contact
               </button>
+
               <button
                 className="btnGhost"
                 type="button"
-                onClick={() => goTo("projects", "projects")}
+                onClick={() => onChangeTab("projects")}
               >
                 View Projects
               </button>
             </div>
           </div>
 
-          <div className="statsRow">
+          <div className="statsRow" aria-label="Profile stats">
             <div className="stat">
-              <b>{profile.stats.posts}</b> posts
+              <b>{profile?.stats?.posts ?? allPosts.length}</b> posts
             </div>
             <div className="stat">
-              <b>{profile.stats.projects}</b> projects
+              <b>{profile?.stats?.projects ?? allPosts.length}</b> projects
             </div>
             <div className="stat">
-              <b>{profile.stats.years}</b> years
+              <b>{profile?.stats?.years ?? "—"}</b> years
             </div>
           </div>
 
           <div className="bioBlock">
-            <div className="realName">{profile.name}</div>
-            <div className="title">{profile.title}</div>
+            <div className="realName">{profile?.name}</div>
+            <div className="title">
+              {profile?.title}
+              {profile?.location ? ` • ${profile.location}` : ""}
+            </div>
+
             <div className="bio">
-              {profile.bioLines.map((line, idx) => (
+              {(profile?.bioLines || []).map((line, idx) => (
                 <div key={idx}>{line}</div>
               ))}
             </div>
+
             <div className="links" aria-label="Profile links">
-              {profile.links.map((l) => {
+              {(profile?.links || []).map((l) => {
                 const href = getHref(l.label, l.value);
                 return (
                   <div key={l.label} className="linkLine">
@@ -109,55 +138,84 @@ export default function ProfilePage({
         </div>
       </section>
 
-      {/* Highlights */}
-      <section className="highlights card">
-        {profile.highlights.map((h) => (
-          <div className="highlight" key={h.title}>
-            <div className="highlightCircle" />
-            <div className="highlightTitle">{h.title}</div>
-            <div className="highlightSub">{h.subtitle}</div>
+      <section className="tabs" aria-label="Profile navigation">
+        {tabs.map((t) => {
+          const isActive = active === t.key;
+          return (
+            <button
+              key={t.key}
+              className={`tab ${isActive ? "active" : ""}`}
+              type="button"
+              onClick={() => onChangeTab(t.key)}
+              aria-current={isActive ? "page" : undefined}
+            >
+              {t.label}
+            </button>
+          );
+        })}
+      </section>
+
+      {active === "profile" ? (
+        <>
+          <section className="card sectionPad" aria-label="Pinned projects">
+            <h3 className="sectionTitle">Pinned</h3>
+            <p className="muted">
+              Selected work — open a card for details and repository links.
+            </p>
+
+            <div className="postsGrid" aria-label="Pinned projects grid">
+              {pinned.map((p) => (
+                <PostCard key={p.id} post={p} onOpen={onOpenPost} />
+              ))}
+            </div>
+          </section>
+
+          <section className="card sectionPad" aria-label="Skills preview">
+            <h3 className="sectionTitle">Skills</h3>
+            <div className="chips">
+              {skillsPreview.map((s) => (
+                <span className="chip" key={s}>
+                  {s}
+                </span>
+              ))}
+            </div>
+
+            <div style={{ marginTop: 12 }}>
+              <button
+                className="btnGhost"
+                type="button"
+                onClick={() => onChangeTab("skills")}
+              >
+                View all skills
+              </button>
+            </div>
+          </section>
+        </>
+      ) : null}
+
+      {active === "projects" ? (
+        <section id="projects" aria-label="Projects">
+          <div className="card sectionPad">
+            <h3 className="sectionTitle">Projects</h3>
+            <p className="muted">
+              Each project should have a repository URL (and an optional live
+              demo).
+            </p>
           </div>
-        ))}
-      </section>
 
-      {/* Tabs */}
-      <section className="tabs card">
-        <button
-          className={`tab ${active === "profile" ? "active" : ""}`}
-          onClick={() => onChangeTab("profile")}
-          type="button"
-        >
-          POSTS
-        </button>
-        <button
-          className={`tab ${active === "projects" ? "active" : ""}`}
-          onClick={() => onChangeTab("projects")}
-          type="button"
-        >
-          PROJECTS
-        </button>
-        <button
-          className={`tab ${active === "skills" ? "active" : ""}`}
-          onClick={() => onChangeTab("skills")}
-          type="button"
-        >
-          SKILLS
-        </button>
-        <button
-          className={`tab ${active === "contact" ? "active" : ""}`}
-          onClick={() => onChangeTab("contact")}
-          type="button"
-        >
-          CONTACT
-        </button>
-      </section>
+          <div className="postsGrid" aria-label="Projects grid">
+            {allPosts.map((p) => (
+              <PostCard key={p.id} post={p} onOpen={onOpenPost} />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
-      {/* Content */}
       {active === "skills" ? (
-        <section className="card sectionPad">
+        <section className="card sectionPad" aria-label="Skills">
           <h3 className="sectionTitle">Skills</h3>
           <div className="chips">
-            {profile.skills.map((s) => (
+            {(profile?.skills || []).map((s) => (
               <span className="chip" key={s}>
                 {s}
               </span>
@@ -167,14 +225,12 @@ export default function ProfilePage({
       ) : null}
 
       {active === "contact" ? (
-        <section id="contact" className="card sectionPad">
+        <section id="contact" className="card sectionPad" aria-label="Contact">
           <h3 className="sectionTitle">Contact</h3>
-          <p className="muted">
-            Fill the form below to reach me. It sends directly via EmailJS.
-          </p>
+          <p className="muted">Fill the form below to reach me.</p>
 
           <div className="contactGrid" aria-label="Contact links">
-            {profile.links.map((l) => {
+            {(profile?.links || []).map((l) => {
               const href = getHref(l.label, l.value);
               return (
                 <div className="contactItem" key={l.label}>
@@ -202,15 +258,6 @@ export default function ProfilePage({
             <h4 className="sectionSubtitle">Send a message</h4>
             <ContactForm />
           </div>
-        </section>
-      ) : null}
-
-      {/* Posts grid (default + projects tab) */}
-      {active !== "skills" && active !== "contact" ? (
-        <section id="projects" className="postsGrid" aria-label="Projects grid">
-          {gridPosts.map((p) => (
-            <PostCard key={p.id} post={p} onOpen={onOpenPost} />
-          ))}
         </section>
       ) : null}
     </div>

@@ -1,27 +1,29 @@
+/* eslint-disable no-unused-vars */
 import React from "react";
 import { User, Briefcase, Layers, Mail } from "lucide-react";
 
-const items = [
-  { key: "profile", icon: User, label: "Profile" },
-  { key: "projects", icon: Briefcase, label: "Projects" },
-  { key: "skills", icon: Layers, label: "Skills" },
-  { key: "contact", icon: Mail, label: "Contact" },
+const navItems = [
+  { key: "profile", label: "Overview", Icon: User },
+  { key: "projects", label: "Work", Icon: Briefcase },
+  { key: "skills", label: "Skills", Icon: Layers },
+  { key: "contact", label: "Contact", Icon: Mail },
 ];
 
 export default function BottomNav({ active, onChange }) {
   return (
     <nav className="bottomNav" aria-label="Bottom navigation">
-      {items.map((it) => {
-        const Icon = it.icon;
+      {navItems.map(({ key, label, Icon }) => {
+        const isActive = active === key;
         return (
           <button
-            key={it.key}
-            className={`bottomNavItem ${active === it.key ? "active" : ""}`}
-            onClick={() => onChange(it.key)}
-            aria-label={it.label}
+            key={key}
+            className={`bottomNavItem ${isActive ? "active" : ""}`}
+            onClick={() => onChange(key)}
             type="button"
+            aria-label={label}
+            aria-current={isActive ? "page" : undefined}
           >
-            <Icon size={22} />
+            <Icon size={22} aria-hidden="true" />
           </button>
         );
       })}

@@ -7,36 +7,36 @@ import ProfilePage from "./pages/ProfilePage";
 import PostModal from "./components/PostModal";
 
 export default function App() {
-  const [active, setActive] = useState("profile"); // profile | projects | skills | contact
+  const [active, setActive] = useState("projects"); // projects | skills | contact
   const [selectedPost, setSelectedPost] = useState(null);
 
   const activeTitle = useMemo(() => {
     switch (active) {
-      case "projects":
-        return "Projects";
       case "skills":
         return "Skills";
+      case "profile":
+        return "Overview";
       case "contact":
         return "Contact";
       default:
-        return "Profile";
+        return "Work";
     }
   }, [active]);
 
   return (
     <div className="appShell">
-      {/* Skip link for keyboard users */}
       <a className="skipLink" href="#main">
         Skip to content
       </a>
 
-      {/* Desktop sidebar */}
       <SideNav active={active} onChange={setActive} profile={profile} />
 
-      {/* Main */}
       <div className="mainArea">
-        {/* Mobile top bar */}
-        <TopBar title={activeTitle} username={profile.username} />
+        <TopBar
+          title={activeTitle}
+          username={profile.username}
+          profile={profile}
+        />
 
         <main id="main" className="content" tabIndex={-1}>
           <ProfilePage
@@ -48,11 +48,9 @@ export default function App() {
           />
         </main>
 
-        {/* Mobile bottom nav */}
         <BottomNav active={active} onChange={setActive} />
       </div>
 
-      {/* Post details modal */}
       <PostModal post={selectedPost} onClose={() => setSelectedPost(null)} />
     </div>
   );

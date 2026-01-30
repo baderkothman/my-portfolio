@@ -11,11 +11,11 @@ export default function ContactForm() {
     email: "",
     subject: "",
     message: "",
-    company: "", // honeypot (spam trap)
+    company: "",
   });
 
   const [touched, setTouched] = useState({});
-  const [status, setStatus] = useState({ state: "idle", msg: "" }); // idle | sending | success | error
+  const [status, setStatus] = useState({ state: "idle", msg: "" });
 
   const errors = useMemo(() => {
     const e = {};
@@ -52,7 +52,6 @@ export default function ContactForm() {
     e.preventDefault();
     setTouched({ name: true, email: true, subject: true, message: true });
 
-    // If bot filled honeypot, silently succeed
     if (values.company.trim()) {
       setStatus({ state: "success", msg: "Thanks! Your message was sent." });
       setValues({ name: "", email: "", subject: "", message: "", company: "" });
@@ -80,7 +79,6 @@ export default function ContactForm() {
     try {
       setStatus({ state: "sending", msg: "Sending..." });
 
-      // Your EmailJS template variables should be: {{name}}, {{email}}, {{subject}}, {{message}}
       await emailjs.send(
         serviceId,
         templateId,
@@ -106,7 +104,6 @@ export default function ContactForm() {
 
   return (
     <form className="contactForm" onSubmit={onSubmit} noValidate>
-      {/* Honeypot field (hidden from humans) */}
       <div
         style={{ position: "absolute", left: "-9999px", top: "auto" }}
         aria-hidden="true"
@@ -128,6 +125,7 @@ export default function ContactForm() {
           <input
             id="name"
             name="name"
+            type="text"
             value={values.name}
             onChange={onChange}
             onBlur={onBlur}
@@ -146,6 +144,7 @@ export default function ContactForm() {
           <input
             id="email"
             name="email"
+            type="email"
             value={values.email}
             onChange={onChange}
             onBlur={onBlur}
@@ -166,6 +165,7 @@ export default function ContactForm() {
         <input
           id="subject"
           name="subject"
+          type="text"
           value={values.subject}
           onChange={onChange}
           onBlur={onBlur}
