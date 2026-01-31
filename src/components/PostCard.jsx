@@ -6,8 +6,8 @@ import {
   Server,
   GraduationCap,
   Briefcase,
-  ExternalLink,
   Github,
+  ArrowUpRight,
 } from "lucide-react";
 
 const ICONS = {
@@ -19,9 +19,9 @@ const ICONS = {
   education: GraduationCap,
 };
 
-function Icon({ iconKey }) {
+function Icon({ iconKey, size = 18 }) {
   const Comp = ICONS[iconKey] || Briefcase;
-  return <Comp size={18} aria-hidden="true" />;
+  return <Comp size={size} aria-hidden="true" />;
 }
 
 function isValidUrl(v) {
@@ -31,99 +31,125 @@ function isValidUrl(v) {
 }
 
 export default function PostCard({ post, onOpen }) {
-  const repoOk = isValidUrl(post?.repoUrl);
-  const demoOk = isValidUrl(post?.demoUrl);
+  const safePost = post && typeof post === "object" ? post : null;
 
-  // IMPORTANT: don't preventDefault() on links
-  function stopPropagation(e) {
-    e.stopPropagation();
-  }
+  const title = safePost?.title ? String(safePost.title) : "Untitled Project";
+  const caption = safePost?.caption
+    ? String(safePost.caption)
+    : "No description yet.";
+
+  const repoUrl = safePost?.repoUrl ? String(safePost.repoUrl).trim() : "";
+  const demoUrl = safePost?.demoUrl ? String(safePost.demoUrl).trim() : "";
+
+  const repoOk = isValidUrl(repoUrl);
+  const demoOk = isValidUrl(demoUrl);
+
+  const tags = Array.isArray(safePost?.tags)
+    ? safePost.tags.filter(Boolean).map(String)
+    : [];
 
   function open() {
-    onOpen?.(post);
+    if (!safePost) return;
+    if (typeof onOpen === "function") onOpen(safePost);
   }
 
-  function onKeyDown(e) {
-    if (e.key === "Enter" || e.key === " ") {
+  function onCardKeyDown(e) {
+    // Make card behave like a button
+    if (e.key === "Enter") {
+      e.preventDefault();
+      open();
+    }
+
+    // Space triggers click for button-like elements (and prevents page scroll)
+    if (e.key === " ") {
       e.preventDefault();
       open();
     }
   }
 
+  function stopOpen(e) {
+    // Keep anchor default behavior, just prevent opening the modal
+    e.stopPropagation();
+  }
+
+  function stopOpenOnKeyDown(e) {
+    // If user presses Enter/Space on the link, don't bubble up to the card
+    if (e.key === "Enter" || e.key === " ") {
+      e.stopPropagation();
+    }
+  }
+
   return (
     <article
-      className="repoCard"
+      className="projectCard"
       role="button"
       tabIndex={0}
       onClick={open}
-      onKeyDown={onKeyDown}
-      aria-label={`Open details for ${post?.title || "project"}`}
+      onKeyDown={onCardKeyDown}
+      aria-label={`Open details for ${title}`}
     >
-      <div className="repoCardTop">
-        <div className="repoCardTitleRow">
-          <span className="repoCardIcon" aria-hidden="true">
-            <Icon iconKey={post?.iconKey} />
-          </span>
+      <div className="projectCardHeader">
+        <span className="projectIcon" aria-hidden="true">
+          <Icon iconKey={safePost?.iconKey} />
+        </span>
 
-          <span className="repoCardTitle">{post?.title}</span>
+        <div style={{ minWidth: 0 }}>
+          <div className="projectTitleRow">
+            <h3 className="projectTitle">{title}</h3>
+            <span className="projectKicker" aria-label="Item type">
+              Project
+            </span>
+          </div>
 
-          <span className="repoCardBadge" aria-label="Project">
-            Project
-          </span>
+          <p className="projectDesc">{caption}</p>
         </div>
-
-        {post?.caption ? (
-          <p className="repoCardDesc">{post.caption}</p>
-        ) : (
-          <p className="repoCardDesc muted">No description yet.</p>
-        )}
       </div>
 
-      {Array.isArray(post?.tags) && post.tags.length ? (
-        <div className="repoCardTags" aria-label="Tags">
-          {post.tags.slice(0, 4).map((t) => (
-            <span className="tag" key={t}>
+      {tags.length ? (
+        <div className="projectTags" aria-label="Project tags">
+          {tags.slice(0, 6).map((t) => (
+            <span className="pill" key={t}>
               {t}
             </span>
           ))}
         </div>
       ) : null}
 
-      <div className="repoCardActions" aria-label="Project actions">
-        {repoOk ? (
-          <a
-            className="repoBtn repoBtnPrimary"
-            href={post.repoUrl}
-            target="_blank"
-            rel="noreferrer"
-            onClick={stopPropagation}
-            aria-label="Open repository"
-          >
-            <Github size={16} aria-hidden="true" />
-            Repo
-          </a>
-        ) : (
-          <span className="repoBtnDisabled" aria-label="Repository missing">
-            <Github size={16} aria-hidden="true" />
-            Repo
-          </span>
-        )}
+      <div className="projectFooter">
+        <div className="projectLinks" aria-label="Project links">
+          {repoOk ? (
+            <a
+              className="linkPill"
+              href={repoUrl}
+              target="_blank"
+              rel="noreferrer"
+              onClick={stopOpen}
+              onKeyDown={stopOpenOnKeyDown}
+              aria-label={`Open repository for ${title}`}
+            >
+              <Github size={16} aria-hidden="true" />
+              Repo <ArrowUpRight size={16} aria-hidden="true" />
+            </a>
+          ) : null}
 
-        {demoOk ? (
-          <a
-            className="repoBtn"
-            href={post.demoUrl}
-            target="_blank"
-            rel="noreferrer"
-            onClick={stopPropagation}
-            aria-label="Open live demo"
-          >
-            <ExternalLink size={16} aria-hidden="true" />
-            Demo
-          </a>
-        ) : null}
+          {demoOk ? (
+            <a
+              className="linkPill"
+              href={demoUrl}
+              target="_blank"
+              rel="noreferrer"
+              onClick={stopOpen}
+              onKeyDown={stopOpenOnKeyDown}
+              aria-label={`Open live demo for ${title}`}
+            >
+              Demo <ArrowUpRight size={16} aria-hidden="true" />
+            </a>
+          ) : null}
+        </div>
 
-        <span className="repoCardHint">Click card for details</span>
+        <span className="viewCase" aria-hidden="true">
+          View details <ArrowUpRight size={16} aria-hidden="true" />
+        </span>
       </div>
     </article>
   );

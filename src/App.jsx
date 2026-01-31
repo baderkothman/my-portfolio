@@ -1,367 +1,302 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  MapPin,
-  Home,
-  ShoppingCart,
-  Palette,
-  Server,
-  GraduationCap,
-  Briefcase,
-  X,
-  Github,
-  ExternalLink,
-  Copy,
-  Check,
-  Tag,
-} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Moon, Sun, Search, Mail, Github, ArrowUpRight } from "lucide-react";
+import PostCard from "./components/PostCard";
+import PostModal from "./components/PostModal";
+import { posts as postsData, profile as profileData } from "./data/profile";
 
-const ICONS = {
-  geofence: MapPin,
-  realestate: Home,
-  pos: ShoppingCart,
-  designsystem: Palette,
-  api: Server,
-  education: GraduationCap,
-};
-
-function Icon({ iconKey, size = 72 }) {
-  const Comp = ICONS[iconKey] || Briefcase;
-  return <Comp size={size} aria-hidden="true" />;
+function getLink(links, label) {
+  const found = (links || []).find(
+    (x) => String(x.label || "").toLowerCase() === String(label).toLowerCase(),
+  );
+  return found?.value ? String(found.value).trim() : "";
 }
 
-function isValidUrl(v) {
-  if (!v) return false;
-  const s = String(v).trim();
-  return s.startsWith("http://") || s.startsWith("https://");
+function pick(v, fallback = "") {
+  return v == null || String(v).trim() === "" ? fallback : String(v);
 }
 
-function getFocusable(container) {
-  if (!container) return [];
-  const selector = [
-    "a[href]",
-    "button:not([disabled])",
-    "textarea:not([disabled])",
-    "input:not([disabled])",
-    "select:not([disabled])",
-    '[tabindex]:not([tabindex="-1"])',
-  ].join(",");
-
-  const nodes = Array.from(container.querySelectorAll(selector));
-  return nodes.filter((el) => {
-    const style = window.getComputedStyle(el);
-    return style.display !== "none" && style.visibility !== "hidden";
-  });
-}
-
-async function safeCopy(text) {
+function safeGetTheme() {
   try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(text);
-      return true;
-    }
+    const saved = localStorage.getItem("theme");
+    if (saved === "dark" || saved === "light") return saved;
   } catch {
-    // ignore and fallback
+    // ignore
   }
 
-  try {
-    const ta = document.createElement("textarea");
-    ta.value = text;
-    ta.setAttribute("readonly", "true");
-    ta.style.position = "fixed";
-    ta.style.left = "-9999px";
-    document.body.appendChild(ta);
-    ta.select();
-    const ok = document.execCommand("copy");
-    document.body.removeChild(ta);
-    return ok;
-  } catch {
-    return false;
-  }
+  const prefersDark =
+    window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? true;
+  return prefersDark ? "dark" : "light";
 }
 
-export default function PostModal({ post, onClose }) {
-  const closeBtnRef = useRef(null);
-  const modalRef = useRef(null);
-  const lastActiveRef = useRef(null);
+export default function App() {
+  // Stabilize imported data (fixes react-hooks/exhaustive-deps warnings)
+  const profile = useMemo(() => profileData || {}, []);
+  const posts = useMemo(() => (Array.isArray(postsData) ? postsData : []), []);
 
-  const [copied, setCopied] = useState(false);
-  const [copyError, setCopyError] = useState("");
+  const [activePost, setActivePost] = useState(null);
+  const [query, setQuery] = useState("");
+  const [tag, setTag] = useState("all");
 
-  const hasRepo = useMemo(() => isValidUrl(post?.repoUrl), [post?.repoUrl]);
-  const hasDemo = useMemo(() => isValidUrl(post?.demoUrl), [post?.demoUrl]);
+  const [theme, setTheme] = useState(() => safeGetTheme());
 
   useEffect(() => {
-    if (!post) return;
+    document.documentElement.setAttribute("data-theme", theme);
 
-    // Reset state on open (async to satisfy react-hooks/set-state-in-effect rule)
-    const resetId = window.setTimeout(() => {
-      setCopied(false);
-      setCopyError("");
-    }, 0);
-
-    lastActiveRef.current = document.activeElement;
-
-    function onKeyDown(e) {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onClose();
-        return;
-      }
-
-      if (e.key === "Tab") {
-        const focusables = getFocusable(modalRef.current);
-        if (focusables.length === 0) return;
-
-        const first = focusables[0];
-        const last = focusables[focusables.length - 1];
-        const active = document.activeElement;
-
-        if (e.shiftKey) {
-          if (active === first || !modalRef.current.contains(active)) {
-            e.preventDefault();
-            last.focus();
-          }
-        } else {
-          if (active === last) {
-            e.preventDefault();
-            first.focus();
-          }
-        }
-      }
+    try {
+      localStorage.setItem("theme", theme);
+    } catch {
+      // ignore
     }
+  }, [theme]);
 
-    window.addEventListener("keydown", onKeyDown);
+  const allTags = useMemo(() => {
+    const set = new Set();
+    for (const p of posts) for (const t of p?.tags || []) set.add(t);
+    return ["all", ...Array.from(set).sort((a, b) => a.localeCompare(b))];
+  }, [posts]);
 
-    // Lock background scroll
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+  const filteredPosts = useMemo(() => {
+    const q = query.trim().toLowerCase();
 
-    // Focus close button on open
-    const focusId = window.setTimeout(() => {
-      closeBtnRef.current?.focus();
-    }, 0);
+    return posts.filter((p) => {
+      const matchesTag = tag === "all" ? true : (p?.tags || []).includes(tag);
 
-    return () => {
-      window.clearTimeout(resetId);
-      window.clearTimeout(focusId);
+      const matchesQuery = !q
+        ? true
+        : String(p?.title || "")
+            .toLowerCase()
+            .includes(q) ||
+          String(p?.caption || "")
+            .toLowerCase()
+            .includes(q) ||
+          (p?.tags || []).some((t) => String(t).toLowerCase().includes(q));
 
-      window.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = prevOverflow;
+      return matchesTag && matchesQuery;
+    });
+  }, [posts, query, tag]);
 
-      // Restore focus to the opener
-      const el = lastActiveRef.current;
-      if (el && typeof el.focus === "function") {
-        window.setTimeout(() => el.focus(), 0);
-      }
-    };
-  }, [post, onClose]);
+  const name = pick(profile.name, "Your Name");
+  const headline = pick(profile.title, "Full-Stack Developer");
+  const location = pick(profile.location, "Lebanon");
 
-  if (!post) return null;
+  const about =
+    Array.isArray(profile.bioLines) && profile.bioLines.length
+      ? profile.bioLines.join(" ")
+      : "I build reliable, scalable web apps with clean UI and strong fundamentals.";
 
-  const titleId = `modal-title-${post.id}`;
-  const descId = `modal-desc-${post.id}`;
+  const email = getLink(profile.links, "Email");
+  const github = getLink(profile.links, "GitHub");
+  const linkedin = getLink(profile.links, "LinkedIn");
 
-  async function onCopyRepo() {
-    setCopyError("");
-    setCopied(false);
-
-    if (!hasRepo) {
-      setCopyError("Repository link is missing.");
-      return;
-    }
-
-    const ok = await safeCopy(String(post.repoUrl).trim());
-    if (ok) {
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1400);
-    } else {
-      setCopyError("Copy failed. Please copy the link manually.");
-    }
-  }
+  const highlights =
+    Array.isArray(profile.skills) && profile.skills.length
+      ? profile.skills.slice(0, 6)
+      : ["React", "Node.js", "REST APIs", "SQL"];
 
   return (
-    <div
-      className="modalOverlay"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={titleId}
-      aria-describedby={descId}
-    >
-      <div ref={modalRef} className="modalCard" role="document">
-        <button
-          ref={closeBtnRef}
-          className="modalClose"
-          onClick={onClose}
-          aria-label="Close dialog"
-          type="button"
-        >
-          <X size={18} aria-hidden="true" />
-        </button>
+    <div className="appShell">
+      <a className="skipLink" href="#main">
+        Skip to content
+      </a>
 
-        <div className="modalLeft">
-          <div className="modalMedia">
-            <div className="modalIcon" aria-hidden="true">
-              <Icon iconKey={post.iconKey} size={86} />
-            </div>
+      <header className="topBar">
+        <div className="topBarInner">
+          <div className="brand">
+            <span className="brandMark" aria-hidden="true" />
+            <span className="brandText">{name}</span>
+          </div>
+
+          <nav className="topNav" aria-label="Primary">
+            <a className="topNavLink" href="#projects">
+              Projects
+            </a>
+            <a className="topNavLink" href="#about">
+              About
+            </a>
+            <a className="topNavLink" href="#contact">
+              Contact
+            </a>
+          </nav>
+
+          <div className="topBarActions">
+            <button
+              className="iconBtn"
+              type="button"
+              aria-label="Toggle theme"
+              aria-pressed={theme === "dark"}
+              onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
+            >
+              {theme === "dark" ? (
+                <Sun size={18} aria-hidden="true" />
+              ) : (
+                <Moon size={18} aria-hidden="true" />
+              )}
+            </button>
           </div>
         </div>
+      </header>
 
-        <div className="modalRight">
-          <div className="modalHeader">
-            <div className="modalTitle" id={titleId}>
-              {post.title}
-            </div>
+      <main id="main" className="content">
+        {/* HERO */}
+        <section className="hero card">
+          <div className="heroLeft">
+            <h1 className="heroTitle">{headline}</h1>
+            <p className="heroSub">
+              <span className="muted">{location}</span>
+            </p>
 
-            {Array.isArray(post.tags) && post.tags.length ? (
-              <div className="modalTags" aria-label="Project tags">
-                {post.tags.map((t) => (
-                  <span className="tag" key={t}>
-                    {t}
-                  </span>
-                ))}
-              </div>
-            ) : null}
-          </div>
+            <p className="heroAbout">{about}</p>
 
-          <div className="modalCaption" id={descId}>
-            {post.caption}
-          </div>
-
-          {/* Repository panel */}
-          <div className="modalSection">
-            <div className="sectionLabel">Repository</div>
-
-            <div className="linkPanel" role="group" aria-label="Project links">
-              <div className="linkRow">
-                <div className="linkRowLeft">
-                  <Github size={16} aria-hidden="true" />
-                  <div className="linkRowText">
-                    <div className="linkRowTitle">Repo</div>
-                    <div className="linkRowValue">
-                      {hasRepo ? post.repoUrl : "Not provided yet"}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="linkRowActions">
-                  {hasRepo ? (
-                    <a
-                      className="btnPrimary"
-                      href={post.repoUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <ExternalLink size={16} aria-hidden="true" />
-                      Open
-                    </a>
-                  ) : (
-                    <button className="btnPrimary" type="button" disabled>
-                      <ExternalLink size={16} aria-hidden="true" />
-                      Open
-                    </button>
-                  )}
-
-                  <button
-                    className="btnGhost"
-                    type="button"
-                    onClick={onCopyRepo}
-                  >
-                    {copied ? (
-                      <>
-                        <Check size={16} aria-hidden="true" />
-                        Copied
-                      </>
-                    ) : (
-                      <>
-                        <Copy size={16} aria-hidden="true" />
-                        Copy
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {hasDemo ? (
-                <div className="linkRow">
-                  <div className="linkRowLeft">
-                    <ExternalLink size={16} aria-hidden="true" />
-                    <div className="linkRowText">
-                      <div className="linkRowTitle">Demo</div>
-                      <div className="linkRowValue">{post.demoUrl}</div>
-                    </div>
-                  </div>
-
-                  <div className="linkRowActions">
-                    <a
-                      className="btnGhost"
-                      href={post.demoUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <ExternalLink size={16} aria-hidden="true" />
-                      Open
-                    </a>
-                  </div>
-                </div>
+            <div className="heroCtas">
+              {email ? (
+                <a className="btnPrimary" href={`mailto:${email}`}>
+                  <Mail size={16} aria-hidden="true" />
+                  Email
+                </a>
               ) : null}
 
-              {copyError ? <div className="error">{copyError}</div> : null}
-            </div>
+              {github ? (
+                <a
+                  className="btnGhost"
+                  href={github}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <Github size={16} aria-hidden="true" />
+                  GitHub <ArrowUpRight size={16} aria-hidden="true" />
+                </a>
+              ) : null}
 
-            {!hasRepo ? (
-              <div className="modalHint" style={{ marginTop: 10 }}>
-                Add <b>repoUrl</b> (and optional <b>demoUrl</b>) in{" "}
-                <b>src/data/profile.js</b>.
+              {linkedin ? (
+                <a
+                  className="btnGhost"
+                  href={linkedin}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  LinkedIn <ArrowUpRight size={16} aria-hidden="true" />
+                </a>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="heroRight">
+            <div className="statGrid" aria-label="Highlights">
+              {highlights.map((x) => (
+                <div className="statCard" key={x}>
+                  <div className="statText">{x}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* PROJECTS */}
+        <section id="projects" className="section">
+          <div className="sectionHead">
+            <h2 className="sectionTitle">Projects</h2>
+
+            <div className="filters" role="group" aria-label="Project filters">
+              <div className="searchWrap">
+                <Search size={16} aria-hidden="true" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="searchInput"
+                  placeholder="Search projects..."
+                  aria-label="Search projects"
+                />
               </div>
+
+              <select
+                className="select"
+                value={tag}
+                onChange={(e) => setTag(e.target.value)}
+                aria-label="Filter by tag"
+              >
+                {allTags.map((t) => (
+                  <option key={t} value={t}>
+                    {t === "all" ? "All tags" : t}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="projectsGrid" role="list" aria-label="Project list">
+            {filteredPosts.map((p) => (
+              <div role="listitem" key={p.id || p.title}>
+                <PostCard post={p} onOpen={setActivePost} />
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ABOUT */}
+        <section id="about" className="section card sectionCard">
+          <h2 className="sectionTitle">About</h2>
+          <p className="bodyText">{about}</p>
+
+          {Array.isArray(profile.skills) && profile.skills.length ? (
+            <>
+              <h3 className="sectionSubtitle">Core skills</h3>
+              <div className="chips" aria-label="Skills">
+                {profile.skills.slice(0, 18).map((s) => (
+                  <span className="chip" key={s}>
+                    {s}
+                  </span>
+                ))}
+              </div>
+            </>
+          ) : null}
+        </section>
+
+        {/* CONTACT */}
+        <section id="contact" className="section card sectionCard">
+          <h2 className="sectionTitle">Contact</h2>
+          <p className="bodyText muted">
+            Want to collaborate or review a project? Reach out:
+          </p>
+
+          <div className="contactRow">
+            {email ? (
+              <a className="linkPill" href={`mailto:${email}`}>
+                Email
+              </a>
+            ) : null}
+
+            {github ? (
+              <a
+                className="linkPill"
+                href={github}
+                target="_blank"
+                rel="noreferrer"
+              >
+                GitHub
+              </a>
+            ) : null}
+
+            {linkedin ? (
+              <a
+                className="linkPill"
+                href={linkedin}
+                target="_blank"
+                rel="noreferrer"
+              >
+                LinkedIn
+              </a>
             ) : null}
           </div>
+        </section>
+      </main>
 
-          {/* What I built */}
-          <div className="modalSection">
-            <div className="sectionLabel">What I built / planned</div>
-            <ul className="bullets">
-              {(post.details || []).map((d, idx) => (
-                <li key={idx}>{d}</li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Highlights */}
-          {Array.isArray(post.metrics) && post.metrics.length ? (
-            <div className="modalSection">
-              <div className="sectionLabel">Highlights</div>
-              <div className="chips">
-                {post.metrics.map((m) => (
-                  <span className="chip" key={m}>
-                    {m}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ) : null}
-
-          {/* Tech stack */}
-          {Array.isArray(post.tags) && post.tags.length ? (
-            <div className="modalSection">
-              <div className="sectionLabel">Tech stack</div>
-              <div className="chips" aria-label="Tech stack">
-                {post.tags.map((t) => (
-                  <span className="chip" key={t}>
-                    <Tag
-                      size={14}
-                      aria-hidden="true"
-                      style={{ marginRight: 6 }}
-                    />
-                    {t}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ) : null}
+      <footer className="footer muted">
+        <div className="content footerInner">
+          Built with React · {new Date().getFullYear()}
         </div>
-      </div>
+      </footer>
 
-      <div className="modalBackdrop" onClick={onClose} />
+      <PostModal post={activePost} onClose={() => setActivePost(null)} />
     </div>
   );
 }

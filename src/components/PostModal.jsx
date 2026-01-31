@@ -12,7 +12,6 @@ import {
   ExternalLink,
   Copy,
   Check,
-  Tag,
 } from "lucide-react";
 
 const ICONS = {
@@ -24,7 +23,7 @@ const ICONS = {
   education: GraduationCap,
 };
 
-function Icon({ iconKey, size = 72 }) {
+function Icon({ iconKey, size = 22 }) {
   const Comp = ICONS[iconKey] || Briefcase;
   return <Comp size={size} aria-hidden="true" />;
 }
@@ -81,20 +80,46 @@ async function safeCopy(text) {
 
 export default function PostModal({ post, onClose }) {
   const closeBtnRef = useRef(null);
-  const modalRef = useRef(null);
+  const sheetRef = useRef(null);
   const lastActiveRef = useRef(null);
 
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState("");
 
-  const hasRepo = useMemo(() => isValidUrl(post?.repoUrl), [post?.repoUrl]);
-  const hasDemo = useMemo(() => isValidUrl(post?.demoUrl), [post?.demoUrl]);
+  const safePost = post && typeof post === "object" ? post : null;
+
+  const repoUrl = safePost?.repoUrl ? String(safePost.repoUrl).trim() : "";
+  const demoUrl = safePost?.demoUrl ? String(safePost.demoUrl).trim() : "";
+
+  const hasRepo = useMemo(() => isValidUrl(repoUrl), [repoUrl]);
+  const hasDemo = useMemo(() => isValidUrl(demoUrl), [demoUrl]);
+
+  const titleText = safePost?.title ? String(safePost.title) : "Project";
+  const captionText = safePost?.caption ? String(safePost.caption) : "";
+
+  const titleId = `modal-title-${safePost?.id || "x"}`;
+  const descId = `modal-desc-${safePost?.id || "x"}`;
+
+  const tags = Array.isArray(safePost?.tags)
+    ? safePost.tags.filter(Boolean).map(String)
+    : [];
+
+  const details = Array.isArray(safePost?.details)
+    ? safePost.details.filter(Boolean).map(String)
+    : [];
+
+  const metrics = Array.isArray(safePost?.metrics)
+    ? safePost.metrics.filter(Boolean).map(String)
+    : [];
 
   useEffect(() => {
-    if (!post) return;
+    if (!safePost) return;
 
-    // Reset state on open (async to satisfy react-hooks/set-state-in-effect rule)
+    let alive = true;
+
+    // Reset UI states on open
     const resetId = window.setTimeout(() => {
+      if (!alive) return;
       setCopied(false);
       setCopyError("");
     }, 0);
@@ -104,12 +129,13 @@ export default function PostModal({ post, onClose }) {
     function onKeyDown(e) {
       if (e.key === "Escape") {
         e.preventDefault();
-        onClose();
+        onClose?.();
         return;
       }
 
       if (e.key === "Tab") {
-        const focusables = getFocusable(modalRef.current);
+        const container = sheetRef.current;
+        const focusables = getFocusable(container);
         if (focusables.length === 0) return;
 
         const first = focusables[0];
@@ -117,7 +143,7 @@ export default function PostModal({ post, onClose }) {
         const active = document.activeElement;
 
         if (e.shiftKey) {
-          if (active === first || !modalRef.current.contains(active)) {
+          if (active === first || !container.contains(active)) {
             e.preventDefault();
             last.focus();
           }
@@ -136,30 +162,27 @@ export default function PostModal({ post, onClose }) {
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
-    // Focus close button on open
+    // Focus close button
     const focusId = window.setTimeout(() => {
       closeBtnRef.current?.focus();
     }, 0);
 
     return () => {
+      alive = false;
       window.clearTimeout(resetId);
       window.clearTimeout(focusId);
-
       window.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = prevOverflow;
 
-      // Restore focus to the opener
+      // Restore focus to opener
       const el = lastActiveRef.current;
       if (el && typeof el.focus === "function") {
         window.setTimeout(() => el.focus(), 0);
       }
     };
-  }, [post, onClose]);
+  }, [safePost, onClose]);
 
-  if (!post) return null;
-
-  const titleId = `modal-title-${post.id}`;
-  const descId = `modal-desc-${post.id}`;
+  if (!safePost) return null;
 
   async function onCopyRepo() {
     setCopyError("");
@@ -170,13 +193,18 @@ export default function PostModal({ post, onClose }) {
       return;
     }
 
-    const ok = await safeCopy(String(post.repoUrl).trim());
+    const ok = await safeCopy(repoUrl);
     if (ok) {
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1400);
     } else {
       setCopyError("Copy failed. Please copy the link manually.");
     }
+  }
+
+  function onOverlayClick(e) {
+    // Only close when clicking the overlay itself, not children.
+    if (e.target === e.currentTarget) onClose?.();
   }
 
   return (
@@ -186,59 +214,58 @@ export default function PostModal({ post, onClose }) {
       aria-modal="true"
       aria-labelledby={titleId}
       aria-describedby={descId}
+      onClick={onOverlayClick}
     >
-      <div ref={modalRef} className="modalCard" role="document">
-        <button
-          ref={closeBtnRef}
-          className="modalClose"
-          onClick={onClose}
-          aria-label="Close dialog"
-          type="button"
-        >
-          <X size={18} aria-hidden="true" />
-        </button>
+      <div ref={sheetRef} className="modalSheet" role="document">
+        <div className="modalSheetTop">
+          <div className="modalSheetTitleRow">
+            <span className="modalMark" aria-hidden="true">
+              <Icon iconKey={safePost?.iconKey} size={20} />
+            </span>
 
-        <div className="modalLeft">
-          <div className="modalMedia">
-            <div className="modalIcon" aria-hidden="true">
-              <Icon iconKey={post.iconKey} size={86} />
+            <div className="modalSheetHead">
+              <div className="modalTitle" id={titleId}>
+                {titleText}
+              </div>
+              <div className="modalCaption" id={descId}>
+                {captionText}
+              </div>
             </div>
+
+            <button
+              ref={closeBtnRef}
+              className="modalClose"
+              onClick={() => onClose?.()}
+              aria-label="Close dialog"
+              type="button"
+            >
+              <X size={18} aria-hidden="true" />
+            </button>
           </div>
+
+          {tags.length ? (
+            <div className="modalTags" aria-label="Tech stack">
+              {tags.map((t, idx) => (
+                <span className="pill" key={`${t}-${idx}`}>
+                  {t}
+                </span>
+              ))}
+            </div>
+          ) : null}
         </div>
 
-        <div className="modalRight">
-          <div className="modalHeader">
-            <div className="modalTitle" id={titleId}>
-              {post.title}
-            </div>
-
-            {Array.isArray(post.tags) && post.tags.length ? (
-              <div className="modalTags" aria-label="Project tags">
-                {post.tags.map((t) => (
-                  <span className="tag" key={t}>
-                    {t}
-                  </span>
-                ))}
-              </div>
-            ) : null}
-          </div>
-
-          <div className="modalCaption" id={descId}>
-            {post.caption}
-          </div>
-
-          {/* Repository panel */}
+        <div className="modalBody">
           <div className="modalSection">
-            <div className="sectionLabel">Repository</div>
+            <div className="sectionLabel">Links</div>
 
             <div className="linkPanel" role="group" aria-label="Project links">
               <div className="linkRow">
                 <div className="linkRowLeft">
                   <Github size={16} aria-hidden="true" />
                   <div className="linkRowText">
-                    <div className="linkRowTitle">Repo</div>
+                    <div className="linkRowTitle">Repository</div>
                     <div className="linkRowValue">
-                      {hasRepo ? post.repoUrl : "Not provided yet"}
+                      {hasRepo ? repoUrl : "Not provided yet"}
                     </div>
                   </div>
                 </div>
@@ -247,7 +274,7 @@ export default function PostModal({ post, onClose }) {
                   {hasRepo ? (
                     <a
                       className="btnPrimary"
-                      href={post.repoUrl}
+                      href={repoUrl}
                       target="_blank"
                       rel="noreferrer"
                     >
@@ -268,13 +295,11 @@ export default function PostModal({ post, onClose }) {
                   >
                     {copied ? (
                       <>
-                        <Check size={16} aria-hidden="true" />
-                        Copied
+                        <Check size={16} aria-hidden="true" /> Copied
                       </>
                     ) : (
                       <>
-                        <Copy size={16} aria-hidden="true" />
-                        Copy
+                        <Copy size={16} aria-hidden="true" /> Copy
                       </>
                     )}
                   </button>
@@ -286,15 +311,15 @@ export default function PostModal({ post, onClose }) {
                   <div className="linkRowLeft">
                     <ExternalLink size={16} aria-hidden="true" />
                     <div className="linkRowText">
-                      <div className="linkRowTitle">Demo</div>
-                      <div className="linkRowValue">{post.demoUrl}</div>
+                      <div className="linkRowTitle">Live demo</div>
+                      <div className="linkRowValue">{demoUrl}</div>
                     </div>
                   </div>
 
                   <div className="linkRowActions">
                     <a
                       className="btnGhost"
-                      href={post.demoUrl}
+                      href={demoUrl}
                       target="_blank"
                       rel="noreferrer"
                     >
@@ -307,52 +332,26 @@ export default function PostModal({ post, onClose }) {
 
               {copyError ? <div className="error">{copyError}</div> : null}
             </div>
-
-            {!hasRepo ? (
-              <div className="modalHint" style={{ marginTop: 10 }}>
-                Add <b>repoUrl</b> (and optional <b>demoUrl</b>) in{" "}
-                <b>src/data/profile.js</b>.
-              </div>
-            ) : null}
           </div>
 
-          {/* What I built */}
-          <div className="modalSection">
-            <div className="sectionLabel">What I built / planned</div>
-            <ul className="bullets">
-              {(post.details || []).map((d, idx) => (
-                <li key={idx}>{d}</li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Highlights */}
-          {Array.isArray(post.metrics) && post.metrics.length ? (
+          {details.length ? (
             <div className="modalSection">
-              <div className="sectionLabel">Highlights</div>
-              <div className="chips">
-                {post.metrics.map((m) => (
-                  <span className="chip" key={m}>
-                    {m}
-                  </span>
+              <div className="sectionLabel">What I built</div>
+              <ul className="bullets">
+                {details.map((d, idx) => (
+                  <li key={`${safePost?.id || "x"}-d-${idx}`}>{d}</li>
                 ))}
-              </div>
+              </ul>
             </div>
           ) : null}
 
-          {/* Tech stack */}
-          {Array.isArray(post.tags) && post.tags.length ? (
+          {metrics.length ? (
             <div className="modalSection">
-              <div className="sectionLabel">Tech stack</div>
-              <div className="chips" aria-label="Tech stack">
-                {post.tags.map((t) => (
-                  <span className="chip" key={t}>
-                    <Tag
-                      size={14}
-                      aria-hidden="true"
-                      style={{ marginRight: 6 }}
-                    />
-                    {t}
+              <div className="sectionLabel">Highlights</div>
+              <div className="chips">
+                {metrics.map((m, idx) => (
+                  <span className="chip" key={`${m}-${idx}`}>
+                    {m}
                   </span>
                 ))}
               </div>
@@ -361,7 +360,8 @@ export default function PostModal({ post, onClose }) {
         </div>
       </div>
 
-      <div className="modalBackdrop" onClick={onClose} />
+      {/* Backdrop for visuals only (click handled by overlay) */}
+      <div className="modalBackdrop" aria-hidden="true" />
     </div>
   );
 }

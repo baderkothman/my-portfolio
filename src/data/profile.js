@@ -5,8 +5,8 @@ export const posts = [
     caption:
       "Admin dashboard + Flutter apps. Circular zones, enter/exit alerts, logs, CSV export.",
     tags: ["Flutter", "Next.js", "SQL", "Maps"],
-    repoUrl: "",
-    demoUrl: "",
+    repoUrl: "", // put your repo link here when ready
+    demoUrl: "", // optional
     iconKey: "geofence",
     details: [
       "Admin dashboard (web): user management, zones configuration, alerts + export.",
@@ -92,6 +92,9 @@ export const posts = [
   },
 ];
 
+// small helper: safe stats if someone edits posts later
+const postCount = Array.isArray(posts) ? posts.length : 0;
+
 export const profile = {
   name: "Bader Othman",
   username: "baderkothman",
@@ -111,8 +114,8 @@ export const profile = {
     { label: "Email", value: "bader.k.othman@gmail.com" },
   ],
   stats: {
-    posts: posts.length,
-    projects: posts.length,
+    posts: postCount,
+    projects: postCount,
     years: "2+",
   },
   skills: [
