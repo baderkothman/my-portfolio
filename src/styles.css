@@ -11,7 +11,7 @@
     --accentHover: #106ebe;
     --accentSoft: rgba(0, 120, 212, 0.12);
 
-    /* Office spectrum (used for accents only) */
+    /* Office spectrum (accent-only) */
     --ms-word: #185abd;
     --ms-excel: #217346;
     --ms-powerpoint: #d24726;
@@ -53,22 +53,6 @@ button {
     font: inherit;
 }
 
-/* WCAG focus */
-a:focus-visible,
-button:focus-visible,
-.navItem:focus-visible,
-.bottomNavItem:focus-visible,
-.postCard:focus-visible,
-.btnPrimary:focus-visible,
-.btnGhost:focus-visible,
-.tab:focus-visible,
-.iconBtn:focus-visible,
-.field input:focus-visible,
-.field textarea:focus-visible {
-    outline: 3px solid var(--focus);
-    outline-offset: 2px;
-}
-
 @media (prefers-reduced-motion: reduce) {
     * {
         animation-duration: 0.01ms !important;
@@ -76,6 +60,19 @@ button:focus-visible,
         transition-duration: 0.01ms !important;
         scroll-behavior: auto !important;
     }
+}
+
+/* WCAG focus */
+a:focus-visible,
+button:focus-visible,
+.tab:focus-visible,
+.iconBtn:focus-visible,
+.bottomNavItem:focus-visible,
+.field input:focus-visible,
+.field textarea:focus-visible,
+.repoCard:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
 }
 
 /* Skip link */
@@ -98,103 +95,12 @@ button:focus-visible,
     transform: translateY(0);
 }
 
-/* Layout */
+/* App layout (sidebar removed) */
 .appShell {
     min-height: 100vh;
-    display: grid;
-    grid-template-columns: 280px 1fr;
-}
-
-/* Desktop left nav */
-.sideNav {
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    border-right: 1px solid var(--border);
-    background: var(--bg);
-    padding: 18px 12px;
-}
-
-.sideNavInner {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-}
-
-/* Brand */
-.sideBrand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 10px;
-}
-
-.sideBrandLogo {
-    width: 34px;
-    height: 34px;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: conic-gradient(from 180deg,
-            var(--ms-word),
-            var(--ms-excel),
-            var(--ms-powerpoint),
-            var(--ms-onenote),
-            var(--ms-outlook));
-}
-
-.sideBrandText {
-    font-weight: 900;
-    letter-spacing: 0.2px;
-}
-
-.sideNavLinks {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.navItem {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 12px;
-    border-radius: 12px;
-    border: 1px solid transparent;
-    background: transparent;
-    cursor: pointer;
-    text-align: left;
-    color: var(--text);
-}
-
-.navItem:hover {
-    background: rgba(0, 0, 0, 0.03);
-}
-
-.navItem.active {
-    background: var(--accentSoft);
-    border-color: rgba(0, 120, 212, 0.22);
-}
-
-.navItem svg {
-    flex: 0 0 auto;
     display: block;
 }
 
-.sideFooter {
-    margin-top: auto;
-    padding: 10px 12px;
-    color: var(--muted);
-    font-size: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-/* Main */
 .mainArea {
     min-height: 100vh;
     display: flex;
@@ -205,12 +111,11 @@ button:focus-visible,
     width: 100%;
     max-width: var(--max);
     margin: 0 auto;
-    padding: 18px 16px 90px;
+    padding: 18px 16px;
 }
 
-/* Mobile top bar */
+/* Top bar (now visible on all sizes) */
 .topBar {
-    display: none;
     position: sticky;
     top: 0;
     z-index: 10;
@@ -265,7 +170,7 @@ button:focus-visible,
     gap: 10px;
 }
 
-/* Fix for your screenshot: center icons + remove baseline issues */
+/* Icon buttons (centering fix) */
 .iconBtn {
     width: 40px;
     height: 40px;
@@ -296,12 +201,18 @@ button:focus-visible,
     transform: translateY(1px);
 }
 
-/* Card */
+/* Common card */
 .card {
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
+}
+
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 /* Profile header */
@@ -474,9 +385,8 @@ button:focus-visible,
     text-underline-offset: 2px;
 }
 
-/* Tabs (GitHub-like underline) */
+/* Tabs */
 .tabs {
-    margin-top: 12px;
     display: flex;
     align-items: center;
     justify-content: flex-start;
@@ -511,7 +421,6 @@ button:focus-visible,
 /* Sections */
 .sectionPad {
     padding: 16px;
-    margin-top: 12px;
 }
 
 .sectionTitle {
@@ -530,6 +439,7 @@ button:focus-visible,
     color: var(--muted);
 }
 
+/* Chips / tags */
 .chips {
     display: flex;
     flex-wrap: wrap;
@@ -543,7 +453,6 @@ button:focus-visible,
     border-radius: 999px;
     font-size: 13px;
     color: var(--muted);
-
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -551,6 +460,15 @@ button:focus-visible,
 
 .chip svg {
     display: block;
+}
+
+.tag {
+    font-size: 12px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    background: #ffffff;
 }
 
 /* Contact grid */
@@ -584,56 +502,145 @@ button:focus-visible,
     text-underline-offset: 2px;
 }
 
-/* Posts grid (Instagram-ish tiles, but Fluent look) */
+/* Projects grid (repo cards) */
 .postsGrid {
     margin-top: 12px;
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
 }
 
-.postCard {
-    padding: 0;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-}
-
-.postCardInner {
-    border-radius: 12px;
-    overflow: hidden;
+/* Repo card (PostCard.jsx) */
+.repoCard {
+    width: 100%;
+    text-align: left;
     border: 1px solid var(--border);
-    background: #ffffff;
-    aspect-ratio: 1 / 1;
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 14px;
+    cursor: pointer;
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
     transition: transform 0.08s ease, box-shadow 0.08s ease;
 }
 
-.postCard:hover .postCardInner {
+.repoCard:hover {
     transform: translateY(-1px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 16px 34px rgba(0, 0, 0, 0.12);
 }
 
-.postCover {
-    width: 100%;
-    height: 100%;
+.repoCardTop {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.repoCardTitleRow {
     display: flex;
     align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.repoCardIcon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    display: inline-flex;
+    align-items: center;
     justify-content: center;
+    color: var(--muted);
     background: linear-gradient(180deg, #ffffff, #faf9f8);
 }
 
-.postIcon {
+.repoCardTitle {
+    font-weight: 900;
+    color: var(--text);
+    letter-spacing: 0.1px;
+}
+
+.repoCardBadge {
+    margin-left: auto;
+    font-size: 12px;
+    font-weight: 900;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px 10px;
+    background: #ffffff;
+}
+
+.repoCardDesc {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.repoCardTags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.repoCardActions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 2px;
+}
+
+.repoBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    font-weight: 900;
+    font-size: 13px;
+    background: #ffffff;
+    color: var(--text);
+    text-decoration: none;
+}
+
+.repoBtn:hover {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+.repoBtnPrimary {
+    background: var(--accent);
+    border-color: rgba(0, 120, 212, 0.35);
+    color: #ffffff;
+}
+
+.repoBtnPrimary:hover {
+    background: var(--accentHover);
+}
+
+.repoBtnDisabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #ffffff;
     color: var(--muted);
 }
 
-.postCard:hover .postIcon {
-    color: var(--text);
-}
-
-/* No emoji UI at all */
-.postEmoji,
-.modalEmoji {
-    display: none !important;
+.repoCardHint {
+    margin-left: auto;
+    color: var(--muted);
+    font-size: 12px;
 }
 
 /* Modal */
@@ -735,15 +742,6 @@ button:focus-visible,
     gap: 6px;
 }
 
-.tag {
-    font-size: 12px;
-    padding: 5px 9px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    color: var(--muted);
-    background: #ffffff;
-}
-
 .modalCaption {
     margin-top: 10px;
     color: var(--text);
@@ -784,101 +782,7 @@ button:focus-visible,
     margin-bottom: 6px;
 }
 
-/* Contact Form */
-.contactFormWrap {
-    margin-top: 14px;
-}
-
-.contactForm {
-    margin-top: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.formRow {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-
-.field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.field label {
-    font-weight: 900;
-    font-size: 13px;
-}
-
-.field input,
-.field textarea {
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 10px 12px;
-    background: #ffffff;
-    color: var(--text);
-    outline: none;
-}
-
-.error {
-    color: #b00020;
-    font-size: 13px;
-}
-
-.formActions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-
-.formStatus {
-    color: var(--muted);
-    font-size: 13px;
-}
-
-/* Mobile bottom nav */
-.bottomNav {
-    display: none;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 56px;
-    background: rgba(243, 242, 241, 0.92);
-    backdrop-filter: blur(8px);
-    border-top: 1px solid var(--border);
-    z-index: 20;
-    padding-bottom: env(safe-area-inset-bottom);
-
-    align-items: center;
-}
-
-.bottomNavItem {
-    flex: 1;
-    height: 56px;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    color: var(--muted);
-
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.bottomNavItem svg {
-    display: block;
-}
-
-.bottomNavItem.active {
-    color: var(--text);
-}
-
-/* Modal link panel (GitHub-ish) */
+/* Modal link panel */
 .linkPanel {
     margin-top: 10px;
     border: 1px solid var(--border);
@@ -936,20 +840,100 @@ button:focus-visible,
     flex-wrap: wrap;
 }
 
+/* Contact form */
+.contactFormWrap {
+    margin-top: 14px;
+}
+
+.contactForm {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.formRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.field label {
+    font-weight: 900;
+    font-size: 13px;
+}
+
+.field input,
+.field textarea {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    background: #ffffff;
+    color: var(--text);
+    outline: none;
+}
+
+.error {
+    color: #b00020;
+    font-size: 13px;
+}
+
+.formActions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.formStatus {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+/* Bottom nav (mobile only) */
+.bottomNav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background: rgba(243, 242, 241, 0.92);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid var(--border);
+    z-index: 20;
+    padding-bottom: env(safe-area-inset-bottom);
+    align-items: center;
+}
+
+.bottomNavItem {
+    flex: 1;
+    height: 56px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bottomNavItem svg {
+    display: block;
+}
+
+.bottomNavItem.active {
+    color: var(--text);
+}
+
 /* Responsive */
 @media (max-width: 900px) {
-    .appShell {
-        grid-template-columns: 1fr;
-    }
-
-    .sideNav {
-        display: none;
-    }
-
-    .topBar {
-        display: block;
-    }
-
     .bottomNav {
         display: flex;
     }
@@ -961,6 +945,14 @@ button:focus-visible,
     .profileHeader {
         grid-template-columns: 120px 1fr;
     }
+
+    .postsGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .contactGrid {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 640px) {
@@ -970,15 +962,6 @@ button:focus-visible,
 
     .avatarWrap {
         justify-content: flex-start;
-    }
-
-    .postsGrid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
-    }
-
-    .contactGrid {
-        grid-template-columns: 1fr;
     }
 
     .formRow {

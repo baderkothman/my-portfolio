@@ -46,6 +46,7 @@ export default function TopBar({ title, username, profile }) {
             </a>
           ) : null}
 
+          {/* Placeholder for future actions/menu */}
           <button className="iconBtn" type="button" aria-label="More actions">
             <MoreHorizontal size={18} aria-hidden="true" />
           </button>

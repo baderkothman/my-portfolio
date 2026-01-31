@@ -34,22 +34,34 @@ export default function PostCard({ post, onOpen }) {
   const repoOk = isValidUrl(post?.repoUrl);
   const demoOk = isValidUrl(post?.demoUrl);
 
-  // Prevent modal open when clicking action buttons
-  function stop(e) {
-    e.preventDefault();
+  // IMPORTANT: don't preventDefault() on links
+  function stopPropagation(e) {
     e.stopPropagation();
   }
 
+  function open() {
+    onOpen?.(post);
+  }
+
+  function onKeyDown(e) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      open();
+    }
+  }
+
   return (
-    <button
-      type="button"
+    <article
       className="repoCard"
-      onClick={() => onOpen(post)}
+      role="button"
+      tabIndex={0}
+      onClick={open}
+      onKeyDown={onKeyDown}
       aria-label={`Open details for ${post?.title || "project"}`}
     >
       <div className="repoCardTop">
         <div className="repoCardTitleRow">
-          <span className="repoCardIcon">
+          <span className="repoCardIcon" aria-hidden="true">
             <Icon iconKey={post?.iconKey} />
           </span>
 
@@ -84,17 +96,14 @@ export default function PostCard({ post, onOpen }) {
             href={post.repoUrl}
             target="_blank"
             rel="noreferrer"
-            onClick={stop}
+            onClick={stopPropagation}
             aria-label="Open repository"
           >
             <Github size={16} aria-hidden="true" />
             Repo
           </a>
         ) : (
-          <span
-            className="repoBtn repoBtnDisabled"
-            aria-label="Repository missing"
-          >
+          <span className="repoBtnDisabled" aria-label="Repository missing">
             <Github size={16} aria-hidden="true" />
             Repo
           </span>
@@ -106,7 +115,7 @@ export default function PostCard({ post, onOpen }) {
             href={post.demoUrl}
             target="_blank"
             rel="noreferrer"
-            onClick={stop}
+            onClick={stopPropagation}
             aria-label="Open live demo"
           >
             <ExternalLink size={16} aria-hidden="true" />
@@ -116,6 +125,6 @@ export default function PostCard({ post, onOpen }) {
 
         <span className="repoCardHint">Click card for details</span>
       </div>
-    </button>
+    </article>
   );
 }

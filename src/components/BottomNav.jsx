@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import { User, Briefcase, Layers, Mail } from "lucide-react";
 
 const navItems = [
