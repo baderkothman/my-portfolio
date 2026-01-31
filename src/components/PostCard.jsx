@@ -45,7 +45,9 @@ export default function PostCard({ post, onOpen }) {
   const demoOk = isValidUrl(demoUrl);
 
   const tags = Array.isArray(safePost?.tags)
-    ? safePost.tags.filter(Boolean).map(String)
+    ? safePost.tags
+        .filter((t) => t != null && String(t).trim() !== "")
+        .map((t) => String(t))
     : [];
 
   function open() {
@@ -53,39 +55,24 @@ export default function PostCard({ post, onOpen }) {
     if (typeof onOpen === "function") onOpen(safePost);
   }
 
-  function onCardKeyDown(e) {
-    // Make card behave like a button
-    if (e.key === "Enter") {
-      e.preventDefault();
-      open();
-    }
-
-    // Space triggers click for button-like elements (and prevents page scroll)
-    if (e.key === " ") {
-      e.preventDefault();
-      open();
-    }
-  }
-
   function stopOpen(e) {
-    // Keep anchor default behavior, just prevent opening the modal
+    // prevent opening modal when clicking a link
     e.stopPropagation();
   }
 
   function stopOpenOnKeyDown(e) {
-    // If user presses Enter/Space on the link, don't bubble up to the card
-    if (e.key === "Enter" || e.key === " ") {
-      e.stopPropagation();
-    }
+    // prevent bubbling Enter/Space from link to the card button
+    if (e.key === "Enter" || e.key === " ") e.stopPropagation();
   }
 
+  // If post is missing, render nothing (avoids weird empty cards)
+  if (!safePost) return null;
+
   return (
-    <article
+    <button
+      type="button"
       className="projectCard"
-      role="button"
-      tabIndex={0}
       onClick={open}
-      onKeyDown={onCardKeyDown}
       aria-label={`Open details for ${title}`}
     >
       <div className="projectCardHeader">
@@ -151,6 +138,6 @@ export default function PostCard({ post, onOpen }) {
           View details <ArrowUpRight size={16} aria-hidden="true" />
         </span>
       </div>
-    </article>
+    </button>
   );
 }

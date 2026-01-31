@@ -1,11 +1,15 @@
-/* ===== Theme tokens (light + dark) ===== */
+/* =========================
+   Theme tokens (light + dark)
+   ========================= */
 :root {
     --max: 1080px;
     --radius: 18px;
     --shadow: 0 16px 50px rgba(0, 0, 0, 0.18);
+
     --focus: rgba(124, 92, 255, 0.55);
     --accent: #7c5cff;
     --accentHover: #6a4cff;
+
     --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial,
         "Noto Sans";
 }
@@ -17,6 +21,8 @@
     --text: rgba(255, 255, 255, 0.92);
     --muted: rgba(255, 255, 255, 0.7);
     --border: rgba(255, 255, 255, 0.12);
+
+    color-scheme: dark;
 }
 
 :root[data-theme="light"] {
@@ -26,9 +32,13 @@
     --text: rgba(20, 23, 32, 0.92);
     --muted: rgba(20, 23, 32, 0.68);
     --border: rgba(20, 23, 32, 0.12);
+
+    color-scheme: light;
 }
 
-/* ===== Base ===== */
+/* =========================
+   Base / Reset
+   ========================= */
 * {
     box-sizing: border-box;
 }
@@ -38,7 +48,6 @@ body {
     height: 100%;
 }
 
-/* IMPORTANT: prevent "white page" layout bugs when root has no height */
 #root {
     min-height: 100%;
 }
@@ -46,15 +55,13 @@ body {
 body {
     margin: 0;
     font-family: var(--font);
-    background: radial-gradient(900px 600px at 10% 0%,
-            rgba(124, 92, 255, 0.18),
-            transparent 55%),
-        radial-gradient(900px 600px at 90% 10%,
-            rgba(76, 196, 255, 0.12),
-            transparent 55%),
-        var(--bg);
     color: var(--text);
     scrollbar-gutter: stable;
+
+    background:
+        radial-gradient(900px 600px at 10% 0%, rgba(124, 92, 255, 0.18), transparent 55%),
+        radial-gradient(900px 600px at 90% 10%, rgba(76, 196, 255, 0.12), transparent 55%),
+        var(--bg);
 }
 
 a {
@@ -64,16 +71,17 @@ a {
 
 button,
 input,
-select {
+select,
+textarea {
     font: inherit;
 }
 
 button {
-    border: none;
+    border: 0;
     background: none;
+    padding: 0;
 }
 
-/* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
     * {
         animation-duration: 0.01ms !important;
@@ -83,17 +91,20 @@ button {
     }
 }
 
-/* Focus */
+/* Focus ring */
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
+textarea:focus-visible,
 .projectCard:focus-visible {
     outline: 3px solid var(--focus);
     outline-offset: 2px;
 }
 
-/* Skip link */
+/* =========================
+   Skip link
+   ========================= */
 .skipLink {
     position: absolute;
     top: 10px;
@@ -112,7 +123,9 @@ select:focus-visible,
     transform: translateY(0);
 }
 
-/* ===== Layout ===== */
+/* =========================
+   Layout helpers
+   ========================= */
 .appShell {
     min-height: 100vh;
 }
@@ -136,14 +149,15 @@ select:focus-visible,
     color: var(--muted);
 }
 
-/* ===== Top bar ===== */
+/* =========================
+   Top bar
+   ========================= */
 .topBar {
     position: sticky;
     top: 0;
     z-index: 10;
 
-    /* fallback if color-mix is unsupported */
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(0, 0, 0, 0.08);
     background: color-mix(in srgb, var(--bg) 70%, transparent);
 
     backdrop-filter: blur(10px);
@@ -155,6 +169,7 @@ select:focus-visible,
     max-width: var(--max);
     margin: 0 auto;
     padding: 0 14px;
+
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -173,9 +188,7 @@ select:focus-visible,
     height: 22px;
     border-radius: 8px;
     border: 1px solid var(--border);
-    background: radial-gradient(circle at 30% 30%,
-            rgba(124, 92, 255, 0.8),
-            rgba(76, 196, 255, 0.5));
+    background: radial-gradient(circle at 30% 30%, rgba(124, 92, 255, 0.8), rgba(76, 196, 255, 0.5));
 }
 
 .topNav {
@@ -206,11 +219,12 @@ select:focus-visible,
     border: 1px solid var(--border);
     background: var(--panel);
     cursor: pointer;
+
     display: inline-flex;
     align-items: center;
     justify-content: center;
+
     color: var(--muted);
-    padding: 0;
     line-height: 0;
 }
 
@@ -219,7 +233,9 @@ select:focus-visible,
     background: var(--panel2);
 }
 
-/* ===== Hero ===== */
+/* =========================
+   Hero
+   ========================= */
 .hero {
     padding: 18px;
     display: grid;
@@ -253,16 +269,19 @@ select:focus-visible,
     flex-wrap: wrap;
 }
 
+/* Buttons */
 .btnPrimary,
 .btnGhost {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
+
     padding: 10px 12px;
     border-radius: 14px;
     border: 1px solid var(--border);
     cursor: pointer;
+
     font-weight: 900;
     background: var(--panel);
 }
@@ -288,7 +307,7 @@ select:focus-visible,
 
 .btnPrimary:disabled,
 .btnGhost:disabled {
-    opacity: 0.6;
+    opacity: 0.65;
     cursor: not-allowed;
 }
 
@@ -297,6 +316,7 @@ select:focus-visible,
     display: block;
 }
 
+/* Stats */
 .statGrid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -315,7 +335,9 @@ select:focus-visible,
     color: var(--text);
 }
 
-/* ===== Sections ===== */
+/* =========================
+   Sections
+   ========================= */
 .section {
     margin-top: 18px;
 }
@@ -351,7 +373,9 @@ select:focus-visible,
     line-height: 1.7;
 }
 
-/* Filters */
+/* =========================
+   Filters (Search + Select)
+   ========================= */
 .filters {
     display: flex;
     gap: 10px;
@@ -363,6 +387,7 @@ select:focus-visible,
     display: inline-flex;
     align-items: center;
     gap: 8px;
+
     padding: 10px 12px;
     border-radius: 14px;
     border: 1px solid var(--border);
@@ -378,16 +403,52 @@ select:focus-visible,
     min-width: 220px;
 }
 
+/* Native select but styled */
 .select {
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+
     border: 1px solid var(--border);
     background: var(--panel);
     color: var(--text);
+
     border-radius: 14px;
-    padding: 10px 12px;
+    padding: 10px 42px 10px 12px;
     font-weight: 900;
+    line-height: 1;
+
+    /* custom arrow */
+    background-image:
+        linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+        linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+    background-position:
+        calc(100% - 20px) 52%,
+        calc(100% - 14px) 52%;
+    background-size: 7px 7px, 7px 7px;
+    background-repeat: no-repeat;
 }
 
-/* ===== Projects ===== */
+.select:hover {
+    background-color: var(--panel2);
+}
+
+.select:focus {
+    outline: none;
+    border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+    box-shadow: 0 0 0 3px var(--focus);
+}
+
+/* This affects option list in most browsers */
+.select option,
+.select optgroup {
+    background: var(--bg);
+    color: var(--text);
+}
+
+/* =========================
+   Projects grid + cards
+   ========================= */
 .projectsGrid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -397,15 +458,18 @@ select:focus-visible,
 .projectCard {
     width: 100%;
     text-align: left;
+
     border: 1px solid var(--border);
     background: var(--panel);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     padding: 16px;
+
     cursor: pointer;
     display: flex;
     flex-direction: column;
     gap: 14px;
+
     transition: transform 0.12s ease, border-color 0.12s ease;
 }
 
@@ -481,6 +545,7 @@ select:focus-visible,
     justify-content: space-between;
     gap: 12px;
     flex-wrap: wrap;
+
     border-top: 1px solid var(--border);
     padding-top: 12px;
 }
@@ -497,6 +562,7 @@ select:focus-visible,
     gap: 8px;
     padding: 9px 10px;
     border-radius: 14px;
+
     border: 1px solid var(--border);
     background: var(--panel2);
     color: var(--text);
@@ -516,7 +582,9 @@ select:focus-visible,
     font-weight: 950;
 }
 
-/* Chips */
+/* =========================
+   Chips
+   ========================= */
 .chips {
     display: flex;
     flex-wrap: wrap;
@@ -536,7 +604,9 @@ select:focus-visible,
     font-weight: 900;
 }
 
-/* Contact */
+/* =========================
+   Contact section links
+   ========================= */
 .contactRow {
     margin-top: 12px;
     display: flex;
@@ -544,7 +614,9 @@ select:focus-visible,
     flex-wrap: wrap;
 }
 
-/* ===== Modal ===== */
+/* =========================
+   Modal
+   ========================= */
 .modalOverlay {
     position: fixed;
     inset: 0;
@@ -569,7 +641,6 @@ select:focus-visible,
     width: min(860px, 100%);
     max-height: 92vh;
 
-    /* fallback if color-mix fails */
     background: rgba(20, 23, 32, 0.65);
     background: color-mix(in srgb, var(--bg) 35%, var(--panel));
 
@@ -603,7 +674,6 @@ select:focus-visible,
     background: var(--panel2);
 }
 
-/* missing in your original but used by PostModal */
 .modalTags {
     margin-top: 10px;
     display: flex;
@@ -629,11 +699,12 @@ select:focus-visible,
     border: 1px solid var(--border);
     background: var(--panel);
     cursor: pointer;
+
     display: inline-flex;
     align-items: center;
     justify-content: center;
+
     color: var(--muted);
-    padding: 0;
 }
 
 .modalClose:hover {
@@ -673,6 +744,7 @@ select:focus-visible,
     border-radius: 14px;
     background: var(--panel2);
     padding: 12px;
+
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -719,13 +791,16 @@ select:focus-visible,
     flex-wrap: wrap;
 }
 
+/* Global error used in multiple places */
 .error {
     color: #ff5a6a;
     font-size: 13px;
     font-weight: 900;
 }
 
-/* Footer */
+/* =========================
+   Footer
+   ========================= */
 .footer {
     margin-top: 18px;
     padding: 14px 0 22px;
@@ -735,7 +810,97 @@ select:focus-visible,
     padding: 0 16px;
 }
 
-/* Responsive */
+/* =========================
+   Contact form (clean premium)
+   ========================= */
+.contactFormWrap {
+    margin-top: 16px;
+}
+
+.contactForm {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.formRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 950;
+    color: var(--muted);
+}
+
+.field input,
+.field textarea {
+    width: 100%;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text);
+
+    border-radius: 14px;
+    padding: 12px 12px;
+    outline: none;
+    box-shadow: none;
+}
+
+.field textarea {
+    resize: vertical;
+    min-height: 140px;
+    line-height: 1.5;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+    color: color-mix(in srgb, var(--muted) 70%, transparent);
+}
+
+.field input:focus,
+.field textarea:focus {
+    border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+    box-shadow: 0 0 0 3px var(--focus);
+}
+
+.field input[aria-invalid="true"],
+.field textarea[aria-invalid="true"] {
+    border-color: #ff5a6a;
+    box-shadow: 0 0 0 3px color-mix(in srgb, #ff5a6a 25%, transparent);
+}
+
+.field .error {
+    margin-top: 6px;
+}
+
+/* Actions row */
+.formActions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.formStatus {
+    font-weight: 900;
+    color: var(--muted);
+}
+
+/* =========================
+   Responsive
+   ========================= */
 @media (max-width: 900px) {
     .projectsGrid {
         grid-template-columns: 1fr;
@@ -751,5 +916,11 @@ select:focus-visible,
 
     .topNav {
         display: none;
+    }
+}
+
+@media (max-width: 640px) {
+    .formRow {
+        grid-template-columns: 1fr;
     }
 }

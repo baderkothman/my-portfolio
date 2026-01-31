@@ -117,13 +117,14 @@ export default function PostModal({ post, onClose }) {
 
     let alive = true;
 
-    // Reset UI states on open
+    // reset UI states on open
     const resetId = window.setTimeout(() => {
       if (!alive) return;
       setCopied(false);
       setCopyError("");
     }, 0);
 
+    // remember opener
     lastActiveRef.current = document.activeElement;
 
     function onKeyDown(e) {
@@ -133,6 +134,7 @@ export default function PostModal({ post, onClose }) {
         return;
       }
 
+      // focus trap
       if (e.key === "Tab") {
         const container = sheetRef.current;
         const focusables = getFocusable(container);
@@ -158,11 +160,11 @@ export default function PostModal({ post, onClose }) {
 
     window.addEventListener("keydown", onKeyDown);
 
-    // Lock background scroll
+    // lock background scroll
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
-    // Focus close button
+    // focus close button
     const focusId = window.setTimeout(() => {
       closeBtnRef.current?.focus();
     }, 0);
@@ -172,9 +174,10 @@ export default function PostModal({ post, onClose }) {
       window.clearTimeout(resetId);
       window.clearTimeout(focusId);
       window.removeEventListener("keydown", onKeyDown);
+
       document.body.style.overflow = prevOverflow;
 
-      // Restore focus to opener
+      // restore focus
       const el = lastActiveRef.current;
       if (el && typeof el.focus === "function") {
         window.setTimeout(() => el.focus(), 0);
@@ -203,7 +206,7 @@ export default function PostModal({ post, onClose }) {
   }
 
   function onOverlayClick(e) {
-    // Only close when clicking the overlay itself, not children.
+    // close only if click is on overlay itself
     if (e.target === e.currentTarget) onClose?.();
   }
 
@@ -360,7 +363,6 @@ export default function PostModal({ post, onClose }) {
         </div>
       </div>
 
-      {/* Backdrop for visuals only (click handled by overlay) */}
       <div className="modalBackdrop" aria-hidden="true" />
     </div>
   );

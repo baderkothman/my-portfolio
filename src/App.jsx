@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Moon, Sun, Search, Mail, Github, ArrowUpRight } from "lucide-react";
 import PostCard from "./components/PostCard";
 import PostModal from "./components/PostModal";
+import ContactForm from "./components/ContactForm";
 import { posts as postsData, profile as profileData } from "./data/profile";
 
 function getLink(links, label) {
@@ -25,11 +26,12 @@ function safeGetTheme() {
 
   const prefersDark =
     window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? true;
+
   return prefersDark ? "dark" : "light";
 }
 
 export default function App() {
-  // Stabilize imported data (fixes react-hooks/exhaustive-deps warnings)
+  // ✅ Stabilize imported data (prevents exhaustive-deps warnings)
   const profile = useMemo(() => profileData || {}, []);
   const posts = useMemo(() => (Array.isArray(postsData) ? postsData : []), []);
 
@@ -286,6 +288,12 @@ export default function App() {
                 LinkedIn
               </a>
             ) : null}
+          </div>
+
+          {/* ✅ CONTACT FORM (your existing component) */}
+          <div className="contactFormWrap">
+            <h3 className="sectionSubtitle">Send a message</h3>
+            <ContactForm />
           </div>
         </section>
       </main>

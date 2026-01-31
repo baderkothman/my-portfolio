@@ -1,47 +1,65 @@
 import { useMemo, useState } from "react";
 import emailjs from "@emailjs/browser";
 
+const INITIAL_VALUES = {
+  name: "",
+  email: "",
+  subject: "",
+  message: "",
+  company: "", // honeypot
+};
+
 function isEmail(v) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || "").trim());
 }
 
 export default function ContactForm() {
-  const [values, setValues] = useState({
-    name: "",
-    email: "",
-    subject: "",
-    message: "",
-    company: "",
-  });
-
+  const [values, setValues] = useState(INITIAL_VALUES);
   const [touched, setTouched] = useState({});
   const [status, setStatus] = useState({ state: "idle", msg: "" });
 
   const errors = useMemo(() => {
     const e = {};
+
     if (!values.name.trim()) e.name = "Name is required.";
     if (!values.email.trim()) e.email = "Email is required.";
     else if (!isEmail(values.email)) e.email = "Enter a valid email address.";
+
     if (!values.subject.trim()) e.subject = "Subject is required.";
+
     if (!values.message.trim()) e.message = "Message is required.";
-    else if (values.message.trim().length < 15)
+    else if (values.message.trim().length < 15) {
       e.message = "Message should be at least 15 characters.";
+    }
+
     return e;
   }, [values]);
 
   const hasErrors = Object.keys(errors).length > 0;
+  const isSending = status.state === "sending";
+
+  function setField(name, value) {
+    setValues((p) => ({ ...p, [name]: value }));
+    // optional: clear status when user starts editing again
+    if (status.state !== "idle") setStatus({ state: "idle", msg: "" });
+  }
 
   function onChange(e) {
     const { name, value } = e.target;
-    setValues((p) => ({ ...p, [name]: value }));
+    setField(name, value);
   }
 
   function onBlur(e) {
-    setTouched((p) => ({ ...p, [e.target.name]: true }));
+    const key = e.target.name;
+    setTouched((p) => ({ ...p, [key]: true }));
   }
 
-  function fieldProps(key) {
-    const show = !!touched[key] && !!errors[key];
+  function showError(key) {
+    return !!touched[key] && !!errors[key];
+  }
+
+  function fieldAria(key) {
+    const show = showError(key);
     return {
       "aria-invalid": show ? "true" : "false",
       "aria-describedby": show ? `${key}-error` : undefined,
@@ -50,11 +68,13 @@ export default function ContactForm() {
 
   async function onSubmit(e) {
     e.preventDefault();
+
     setTouched({ name: true, email: true, subject: true, message: true });
 
+    // Honeypot: bots fill it
     if (values.company.trim()) {
       setStatus({ state: "success", msg: "Thanks! Your message was sent." });
-      setValues({ name: "", email: "", subject: "", message: "", company: "" });
+      setValues(INITIAL_VALUES);
       setTouched({});
       return;
     }
@@ -92,7 +112,7 @@ export default function ContactForm() {
       );
 
       setStatus({ state: "success", msg: "Thanks! Your message was sent." });
-      setValues({ name: "", email: "", subject: "", message: "", company: "" });
+      setValues(INITIAL_VALUES);
       setTouched({});
     } catch {
       setStatus({
@@ -104,10 +124,8 @@ export default function ContactForm() {
 
   return (
     <form className="contactForm" onSubmit={onSubmit} noValidate>
-      <div
-        style={{ position: "absolute", left: "-9999px", top: "auto" }}
-        aria-hidden="true"
-      >
+      {/* Honeypot */}
+      <div className="hpWrap" aria-hidden="true">
         <label htmlFor="company">Company</label>
         <input
           id="company"
@@ -121,8 +139,11 @@ export default function ContactForm() {
 
       <div className="formRow">
         <div className="field">
-          <label htmlFor="name">Name</label>
+          <label className="fieldLabel" htmlFor="name">
+            Name
+          </label>
           <input
+            className={`fieldInput ${showError("name") ? "invalid" : ""}`}
             id="name"
             name="name"
             type="text"
@@ -130,18 +151,22 @@ export default function ContactForm() {
             onChange={onChange}
             onBlur={onBlur}
             autoComplete="name"
-            {...fieldProps("name")}
+            disabled={isSending}
+            {...fieldAria("name")}
           />
-          {touched.name && errors.name ? (
-            <div className="error" id="name-error" role="alert">
+          {showError("name") ? (
+            <div className="fieldError" id="name-error" role="alert">
               {errors.name}
             </div>
           ) : null}
         </div>
 
         <div className="field">
-          <label htmlFor="email">Email</label>
+          <label className="fieldLabel" htmlFor="email">
+            Email
+          </label>
           <input
+            className={`fieldInput ${showError("email") ? "invalid" : ""}`}
             id="email"
             name="email"
             type="email"
@@ -150,10 +175,11 @@ export default function ContactForm() {
             onBlur={onBlur}
             autoComplete="email"
             inputMode="email"
-            {...fieldProps("email")}
+            disabled={isSending}
+            {...fieldAria("email")}
           />
-          {touched.email && errors.email ? (
-            <div className="error" id="email-error" role="alert">
+          {showError("email") ? (
+            <div className="fieldError" id="email-error" role="alert">
               {errors.email}
             </div>
           ) : null}
@@ -161,51 +187,61 @@ export default function ContactForm() {
       </div>
 
       <div className="field">
-        <label htmlFor="subject">Subject</label>
+        <label className="fieldLabel" htmlFor="subject">
+          Subject
+        </label>
         <input
+          className={`fieldInput ${showError("subject") ? "invalid" : ""}`}
           id="subject"
           name="subject"
           type="text"
           value={values.subject}
           onChange={onChange}
           onBlur={onBlur}
-          {...fieldProps("subject")}
+          disabled={isSending}
+          {...fieldAria("subject")}
         />
-        {touched.subject && errors.subject ? (
-          <div className="error" id="subject-error" role="alert">
+        {showError("subject") ? (
+          <div className="fieldError" id="subject-error" role="alert">
             {errors.subject}
           </div>
         ) : null}
       </div>
 
       <div className="field">
-        <label htmlFor="message">Message</label>
+        <label className="fieldLabel" htmlFor="message">
+          Message
+        </label>
         <textarea
+          className={`fieldInput fieldTextarea ${
+            showError("message") ? "invalid" : ""
+          }`}
           id="message"
           name="message"
           value={values.message}
           onChange={onChange}
           onBlur={onBlur}
           rows={6}
-          {...fieldProps("message")}
+          disabled={isSending}
+          {...fieldAria("message")}
         />
-        {touched.message && errors.message ? (
-          <div className="error" id="message-error" role="alert">
+        {showError("message") ? (
+          <div className="fieldError" id="message-error" role="alert">
             {errors.message}
           </div>
         ) : null}
       </div>
 
       <div className="formActions">
-        <button
-          className="btnPrimary"
-          type="submit"
-          disabled={status.state === "sending"}
-        >
-          {status.state === "sending" ? "Sending..." : "Send message"}
+        <button className="btnPrimary" type="submit" disabled={isSending}>
+          {isSending ? "Sending..." : "Send message"}
         </button>
 
-        <div className="formStatus" role="status" aria-live="polite">
+        <div
+          className={`formStatus ${status.state}`}
+          role="status"
+          aria-live="polite"
+        >
           {status.msg}
         </div>
       </div>
