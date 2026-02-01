@@ -1,37 +1,71 @@
+/* ==========================================================================
+   styles.css — Portfolio UI (Light/Dark)
+   --------------------------------------------------------------------------
+   Fixes + upgrades:
+   - Fully styled TagDropdown (was missing before)
+   - Real #top hero section (bottom nav active state works reliably)
+   - Cleaner hero hierarchy + footer polish
+   ========================================================================== */
+
 /* =========================
-   Theme tokens (light + dark)
+   Theme tokens
    ========================= */
 :root {
     --max: 1080px;
-    --radius: 18px;
-    --shadow: 0 16px 50px rgba(0, 0, 0, 0.18);
 
-    --focus: rgba(124, 92, 255, 0.55);
+    --radius: 18px;
+    --radius-sm: 14px;
+
+    --pad: 16px;
+    --pad-lg: 18px;
+
+    --shadow-sm: 0 10px 26px rgba(0, 0, 0, 0.12);
+    --shadow-md: 0 16px 46px rgba(0, 0, 0, 0.16);
+    --shadow-xl: 0 24px 70px rgba(0, 0, 0, 0.55);
+
     --accent: #7c5cff;
     --accentHover: #6a4cff;
+    --focus: rgba(124, 92, 255, 0.55);
 
-    --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial,
-        "Noto Sans";
+    --danger: #ff5a6a;
+    --success: #2bd576;
+
+    --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial,
+        "Noto Sans", "Helvetica Neue", sans-serif;
 }
 
 :root[data-theme="dark"] {
     --bg: #0b0f14;
+
     --panel: rgba(255, 255, 255, 0.06);
     --panel2: rgba(255, 255, 255, 0.04);
+
     --text: rgba(255, 255, 255, 0.92);
     --muted: rgba(255, 255, 255, 0.7);
     --border: rgba(255, 255, 255, 0.12);
+
+    --glowA: rgba(124, 92, 255, 0.14);
+    --glowB: rgba(76, 196, 255, 0.1);
+
+    --glass: rgba(14, 18, 26, 0.56);
 
     color-scheme: dark;
 }
 
 :root[data-theme="light"] {
     --bg: #f7f7fb;
-    --panel: rgba(255, 255, 255, 0.92);
-    --panel2: rgba(255, 255, 255, 0.8);
+
+    --panel: rgba(255, 255, 255, 0.94);
+    --panel2: rgba(255, 255, 255, 0.82);
+
     --text: rgba(20, 23, 32, 0.92);
     --muted: rgba(20, 23, 32, 0.68);
     --border: rgba(20, 23, 32, 0.12);
+
+    --glowA: rgba(124, 92, 255, 0.12);
+    --glowB: rgba(76, 196, 255, 0.08);
+
+    --glass: rgba(255, 255, 255, 0.72);
 
     color-scheme: light;
 }
@@ -39,13 +73,25 @@
 /* =========================
    Base / Reset
    ========================= */
-* {
+*,
+*::before,
+*::after {
     box-sizing: border-box;
 }
 
 html,
 body {
     height: 100%;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
 }
 
 #root {
@@ -56,12 +102,18 @@ body {
     margin: 0;
     font-family: var(--font);
     color: var(--text);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
     scrollbar-gutter: stable;
 
+    /* ONE background (layered) */
     background:
-        radial-gradient(900px 600px at 10% 0%, rgba(124, 92, 255, 0.18), transparent 55%),
-        radial-gradient(900px 600px at 90% 10%, rgba(76, 196, 255, 0.12), transparent 55%),
+        radial-gradient(700px 450px at 18% 12%, var(--glowA), transparent 60%),
+        radial-gradient(600px 420px at 88% 18%, var(--glowB), transparent 62%),
         var(--bg);
+    background-attachment: fixed;
 }
 
 a {
@@ -82,16 +134,12 @@ button {
     padding: 0;
 }
 
-@media (prefers-reduced-motion: reduce) {
-    * {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
-    }
+img {
+    max-width: 100%;
+    display: block;
 }
 
-/* Focus ring */
+/* Accessible focus ring */
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
@@ -102,6 +150,11 @@ textarea:focus-visible,
     outline-offset: 2px;
 }
 
+/* Make anchor jumps not hide behind sticky top bar */
+section[id] {
+    scroll-margin-top: 84px;
+}
+
 /* =========================
    Skip link
    ========================= */
@@ -109,13 +162,16 @@ textarea:focus-visible,
     position: absolute;
     top: 10px;
     left: 10px;
-    z-index: 999;
+    z-index: 1000;
+
     padding: 10px 12px;
     border-radius: 12px;
+
     border: 1px solid var(--border);
     background: var(--panel);
-    box-shadow: var(--shadow);
-    transform: translateY(-200%);
+    box-shadow: var(--shadow-md);
+
+    transform: translateY(-220%);
     transition: transform 0.15s ease;
 }
 
@@ -134,15 +190,15 @@ textarea:focus-visible,
     width: 100%;
     max-width: var(--max);
     margin: 0 auto;
-    padding: 18px 16px 40px;
+    padding: 18px 16px 44px;
 }
 
 .card {
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(12px);
 }
 
 .muted {
@@ -155,17 +211,17 @@ textarea:focus-visible,
 .topBar {
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: 30;
 
-    background: rgba(0, 0, 0, 0.08);
-    background: color-mix(in srgb, var(--bg) 70%, transparent);
+    background: rgba(0, 0, 0, 0.06);
+    background: color-mix(in srgb, var(--bg) 72%, transparent);
 
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
 }
 
 .topBarInner {
-    height: 58px;
+    height: 60px;
     max-width: var(--max);
     margin: 0 auto;
     padding: 0 14px;
@@ -176,11 +232,18 @@ textarea:focus-visible,
     gap: 12px;
 }
 
-.brand {
-    display: flex;
+.topBarLeft {
+    display: inline-flex;
     align-items: center;
     gap: 10px;
-    font-weight: 950;
+}
+
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 900;
+    letter-spacing: -0.2px;
 }
 
 .brandMark {
@@ -188,20 +251,27 @@ textarea:focus-visible,
     height: 22px;
     border-radius: 8px;
     border: 1px solid var(--border);
-    background: radial-gradient(circle at 30% 30%, rgba(124, 92, 255, 0.8), rgba(76, 196, 255, 0.5));
+    background: radial-gradient(circle at 30% 30%,
+            rgba(124, 92, 255, 0.85),
+            rgba(76, 196, 255, 0.5));
+}
+
+.brandText {
+    font-size: 14px;
 }
 
 .topNav {
     display: flex;
-    gap: 14px;
+    gap: 10px;
     align-items: center;
 }
 
 .topNavLink {
     color: var(--muted);
-    font-weight: 900;
+    font-weight: 850;
     font-size: 13px;
-    padding: 8px 10px;
+
+    padding: 9px 10px;
     border-radius: 12px;
     border: 1px solid transparent;
 }
@@ -212,10 +282,17 @@ textarea:focus-visible,
     background: var(--panel2);
 }
 
+.topBarActions {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
 .iconBtn {
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    height: 42px;
     border-radius: 14px;
+
     border: 1px solid var(--border);
     background: var(--panel);
     cursor: pointer;
@@ -234,121 +311,14 @@ textarea:focus-visible,
 }
 
 /* =========================
-   Hero
-   ========================= */
-.hero {
-    padding: 18px;
-    display: grid;
-    grid-template-columns: 1.4fr 1fr;
-    gap: 16px;
-}
-
-.heroTitle {
-    margin: 0;
-    font-size: 28px;
-    letter-spacing: -0.6px;
-    font-weight: 950;
-}
-
-.heroSub {
-    margin: 10px 0 0;
-    font-weight: 800;
-}
-
-.heroAbout {
-    margin: 14px 0 0;
-    color: var(--muted);
-    line-height: 1.6;
-    font-weight: 750;
-}
-
-.heroCtas {
-    margin-top: 16px;
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-/* Buttons */
-.btnPrimary,
-.btnGhost {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-
-    padding: 10px 12px;
-    border-radius: 14px;
-    border: 1px solid var(--border);
-    cursor: pointer;
-
-    font-weight: 900;
-    background: var(--panel);
-}
-
-.btnPrimary {
-    background: var(--accent);
-    border-color: rgba(124, 92, 255, 0.45);
-    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
-    color: white;
-}
-
-.btnPrimary:hover {
-    background: var(--accentHover);
-}
-
-.btnGhost {
-    color: var(--text);
-}
-
-.btnGhost:hover {
-    background: var(--panel2);
-}
-
-.btnPrimary:disabled,
-.btnGhost:disabled {
-    opacity: 0.65;
-    cursor: not-allowed;
-}
-
-.btnPrimary svg,
-.btnGhost svg {
-    display: block;
-}
-
-/* Stats */
-.statGrid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-}
-
-.statCard {
-    border: 1px solid var(--border);
-    background: var(--panel2);
-    border-radius: 16px;
-    padding: 12px;
-}
-
-.statText {
-    font-weight: 900;
-    color: var(--text);
-}
-
-/* =========================
    Sections
    ========================= */
 .section {
     margin-top: 18px;
 }
 
-.sectionHead {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 12px;
+.sectionCard {
+    padding: 16px;
 }
 
 .sectionTitle {
@@ -364,18 +334,133 @@ textarea:focus-visible,
     font-weight: 950;
 }
 
-.sectionCard {
-    padding: 16px;
-}
-
 .bodyText {
     margin: 10px 0 0;
-    line-height: 1.7;
+    line-height: 1.75;
 }
 
 /* =========================
-   Filters (Search + Select)
+   Hero
    ========================= */
+.hero {
+    overflow: hidden;
+}
+
+.heroInner {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 16px;
+    align-items: start;
+}
+
+.heroKicker {
+    font-weight: 900;
+    font-size: 13px;
+}
+
+.heroTitle {
+    margin: 8px 0 0;
+    font-size: 34px;
+    line-height: 1.06;
+    letter-spacing: -0.9px;
+    font-weight: 1000;
+}
+
+.heroSubtitle {
+    margin-top: 8px;
+    font-size: 16px;
+    font-weight: 900;
+    color: var(--muted);
+}
+
+.heroDesc {
+    margin-top: 12px;
+    line-height: 1.75;
+}
+
+.heroActions {
+    margin-top: 14px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.heroLinks {
+    margin-top: 14px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* =========================
+   Stats
+   ========================= */
+.statGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.statCard {
+    border: 1px solid var(--border);
+    background: var(--panel2);
+    border-radius: 16px;
+    padding: 12px;
+}
+
+.statText {
+    font-weight: 950;
+    color: var(--text);
+}
+
+/* =========================
+   Chips
+   ========================= */
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.chip {
+    border: 1px solid var(--border);
+    background: var(--panel2);
+
+    padding: 8px 10px;
+    border-radius: 999px;
+
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 900;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pill {
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 999px;
+
+    border: 1px solid var(--border);
+    background: var(--panel2);
+    color: var(--muted);
+    font-weight: 900;
+}
+
+/* =========================
+   Projects header + filters
+   ========================= */
+.sectionHead {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
 .filters {
     display: flex;
     gap: 10px;
@@ -391,6 +476,7 @@ textarea:focus-visible,
     padding: 10px 12px;
     border-radius: 14px;
     border: 1px solid var(--border);
+
     background: var(--panel);
     color: var(--muted);
 }
@@ -403,47 +489,110 @@ textarea:focus-visible,
     min-width: 220px;
 }
 
-/* Native select but styled */
-.select {
-    -webkit-appearance: none;
-    appearance: none;
-    cursor: pointer;
+.searchInput::placeholder {
+    color: color-mix(in srgb, var(--muted) 70%, transparent);
+}
+
+/* =========================
+   TagDropdown (FULLY STYLED)
+   ========================= */
+.tagDrop {
+    position: relative;
+}
+
+.tagTrigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+
+    min-width: 180px;
+    padding: 10px 12px;
+    border-radius: 14px;
 
     border: 1px solid var(--border);
     background: var(--panel);
     color: var(--text);
-
-    border-radius: 14px;
-    padding: 10px 42px 10px 12px;
+    cursor: pointer;
     font-weight: 900;
-    line-height: 1;
-
-    /* custom arrow */
-    background-image:
-        linear-gradient(45deg, transparent 50%, var(--muted) 50%),
-        linear-gradient(135deg, var(--muted) 50%, transparent 50%);
-    background-position:
-        calc(100% - 20px) 52%,
-        calc(100% - 14px) 52%;
-    background-size: 7px 7px, 7px 7px;
-    background-repeat: no-repeat;
 }
 
-.select:hover {
-    background-color: var(--panel2);
+.tagTrigger:hover {
+    background: var(--panel2);
 }
 
-.select:focus {
+.tagTriggerText {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tagMenu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+
+    width: min(320px, 90vw);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    box-shadow: var(--shadow-md);
+    backdrop-filter: blur(12px);
+
+    z-index: 55;
+    overflow: hidden;
+}
+
+.tagMenuSearch {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+}
+
+.tagMenuInput {
+    width: 100%;
+    border: none;
     outline: none;
-    border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
-    box-shadow: 0 0 0 3px var(--focus);
+    background: transparent;
+    color: var(--text);
 }
 
-/* This affects option list in most browsers */
-.select option,
-.select optgroup {
-    background: var(--bg);
+.tagMenuInput::placeholder {
+    color: color-mix(in srgb, var(--muted) 70%, transparent);
+}
+
+.tagMenuList {
+    max-height: 260px;
+    overflow: auto;
+    padding: 8px;
+}
+
+.tagOption {
+    width: 100%;
+    text-align: left;
+
+    padding: 10px 10px;
+    border-radius: 12px;
+
+    border: 1px solid transparent;
+    background: transparent;
     color: var(--text);
+    cursor: pointer;
+    font-weight: 900;
+}
+
+.tagOption:hover {
+    background: var(--panel2);
+    border-color: var(--border);
+}
+
+.tagOption.active {
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 /* =========================
@@ -456,13 +605,16 @@ textarea:focus-visible,
 }
 
 .projectCard {
+    appearance: none;
+    -webkit-appearance: none;
+
     width: 100%;
     text-align: left;
 
     border: 1px solid var(--border);
     background: var(--panel);
     border-radius: var(--radius);
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow-sm);
     padding: 16px;
 
     cursor: pointer;
@@ -470,13 +622,13 @@ textarea:focus-visible,
     flex-direction: column;
     gap: 14px;
 
-    transition: transform 0.12s ease, border-color 0.12s ease;
+    transition: transform 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
 }
 
 .projectCard:hover {
     transform: translateY(-2px);
-    border-color: rgba(124, 92, 255, 0.35);
     border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+    box-shadow: var(--shadow-md);
 }
 
 .projectCardHeader {
@@ -489,11 +641,14 @@ textarea:focus-visible,
     width: 40px;
     height: 40px;
     border-radius: 14px;
+
     border: 1px solid var(--border);
+    background: var(--panel2);
+
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: var(--panel2);
+
     color: var(--text);
     flex: 0 0 auto;
 }
@@ -509,6 +664,7 @@ textarea:focus-visible,
     margin: 0;
     font-size: 16px;
     font-weight: 950;
+    letter-spacing: -0.2px;
 }
 
 .projectKicker {
@@ -520,23 +676,13 @@ textarea:focus-visible,
 .projectDesc {
     margin: 8px 0 0;
     color: var(--muted);
-    line-height: 1.5;
+    line-height: 1.55;
 }
 
 .projectTags {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-}
-
-.pill {
-    font-size: 12px;
-    padding: 6px 10px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    color: var(--muted);
-    background: var(--panel2);
-    font-weight: 900;
 }
 
 .projectFooter {
@@ -560,6 +706,7 @@ textarea:focus-visible,
     display: inline-flex;
     align-items: center;
     gap: 8px;
+
     padding: 9px 10px;
     border-radius: 14px;
 
@@ -570,7 +717,6 @@ textarea:focus-visible,
 }
 
 .linkPill:hover {
-    border-color: rgba(124, 92, 255, 0.35);
     border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
 }
 
@@ -583,35 +729,217 @@ textarea:focus-visible,
 }
 
 /* =========================
-   Chips
+   Buttons
    ========================= */
-.chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.chip {
-    border: 1px solid var(--border);
-    background: var(--panel2);
-    padding: 8px 10px;
-    border-radius: 999px;
-    font-size: 13px;
-    color: var(--muted);
+.btnPrimary,
+.btnGhost {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    justify-content: center;
+    gap: 8px;
+
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+
+    cursor: pointer;
     font-weight: 900;
+    background: var(--panel);
+}
+
+.btnPrimary {
+    background: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 48%, transparent);
+    color: #fff;
+}
+
+.btnPrimary:hover {
+    background: var(--accentHover);
+}
+
+.btnGhost:hover {
+    background: var(--panel2);
+}
+
+.btnPrimary:disabled,
+.btnGhost:disabled {
+    opacity: 0.68;
+    cursor: not-allowed;
+}
+
+.btnPrimary svg,
+.btnGhost svg {
+    display: block;
 }
 
 /* =========================
-   Contact section links
+   Contact form
    ========================= */
-.contactRow {
+.contactFormWrap {
+    margin-top: 16px;
+}
+
+.contactForm {
     margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Honeypot wrapper */
+.hpWrap {
+    position: absolute;
+    left: -9999px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+.formRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 900;
+    color: var(--muted);
+}
+
+.field input,
+.field textarea {
+    width: 100%;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text);
+
+    border-radius: 14px;
+    padding: 12px 12px;
+
+    outline: none;
+    box-shadow: none;
+}
+
+.field textarea {
+    resize: vertical;
+    min-height: 140px;
+    line-height: 1.55;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+    color: color-mix(in srgb, var(--muted) 70%, transparent);
+}
+
+.field input:focus,
+.field textarea:focus {
+    border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+    box-shadow: 0 0 0 3px var(--focus);
+}
+
+.field input[aria-invalid="true"],
+.field textarea[aria-invalid="true"] {
+    border-color: var(--danger);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 25%, transparent);
+}
+
+.error {
+    color: var(--danger);
+    font-size: 13px;
+    font-weight: 900;
+    margin-top: 6px;
+}
+
+.formActions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.formStatus {
+    font-weight: 900;
+    color: var(--muted);
+}
+
+.formStatus.success {
+    color: color-mix(in srgb, var(--success) 70%, var(--text));
+}
+
+.formStatus.error {
+    color: var(--danger);
+}
+
+.formStatus.sending {
+    color: var(--muted);
+}
+
+.contactDivider {
+    height: 1px;
+    background: var(--border);
+    margin: 16px 0 10px;
+}
+
+.contactRow {
+    margin-top: 10px;
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
+}
+
+/* =========================
+   CV page
+   ========================= */
+.cvHeader {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.cvTitle {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cvActions {
+    display: inline-flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.cvFrameWrap {
+    border: 1px solid var(--border);
+    background: var(--panel2);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.cvFrame {
+    width: 100%;
+    height: min(72vh, 760px);
+    border: 0;
+    display: block;
+}
+
+.cvHint {
+    margin: 12px 0 0;
+    font-weight: 800;
+    font-size: 13px;
 }
 
 /* =========================
@@ -620,35 +948,35 @@ textarea:focus-visible,
 .modalOverlay {
     position: fixed;
     inset: 0;
-    z-index: 50;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    z-index: 70;
+
+    display: grid;
+    place-items: center;
     padding: 16px;
 }
 
-/* Backdrop stays under the sheet */
 .modalBackdrop {
     position: fixed;
     inset: 0;
-    z-index: 51;
-    background: rgba(0, 0, 0, 0.65);
+    z-index: 71;
+    background: rgba(0, 0, 0, 0.62);
+    pointer-events: none;
 }
 
 .modalSheet {
     position: relative;
-    z-index: 60;
+    z-index: 72;
+
     width: min(860px, 100%);
     max-height: 92vh;
 
-    background: rgba(20, 23, 32, 0.65);
-    background: color-mix(in srgb, var(--bg) 35%, var(--panel));
-
+    background: color-mix(in srgb, var(--bg) 35%, var(--glass));
     border: 1px solid var(--border);
     border-radius: 20px;
-    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+
+    box-shadow: var(--shadow-xl);
     overflow: hidden;
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(14px);
 }
 
 .modalSheetTop {
@@ -668,10 +996,11 @@ textarea:focus-visible,
     height: 38px;
     border-radius: 14px;
     border: 1px solid var(--border);
+    background: var(--panel2);
+
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: var(--panel2);
 }
 
 .modalTags {
@@ -684,18 +1013,21 @@ textarea:focus-visible,
 .modalTitle {
     font-size: 18px;
     font-weight: 950;
+    letter-spacing: -0.2px;
 }
 
 .modalCaption {
     margin-top: 6px;
     color: var(--muted);
-    font-weight: 800;
+    font-weight: 750;
+    line-height: 1.45;
 }
 
 .modalClose {
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    height: 42px;
     border-radius: 14px;
+
     border: 1px solid var(--border);
     background: var(--panel);
     cursor: pointer;
@@ -770,6 +1102,7 @@ textarea:focus-visible,
     display: flex;
     flex-direction: column;
     gap: 4px;
+    min-width: 0;
 }
 
 .linkRowTitle {
@@ -791,122 +1124,116 @@ textarea:focus-visible,
     flex-wrap: wrap;
 }
 
-/* Global error used in multiple places */
-.error {
-    color: #ff5a6a;
-    font-size: 13px;
-    font-weight: 900;
-}
-
 /* =========================
    Footer
    ========================= */
 .footer {
     margin-top: 18px;
-    padding: 14px 0 22px;
+    padding: 0 0 22px;
 }
 
 .footerInner {
-    padding: 0 16px;
+    padding: 0 0;
+}
+
+.footerCard {
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.footerBrand {
+    font-weight: 950;
+    letter-spacing: -0.2px;
+}
+
+.footerNav {
+    display: inline-flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.footerLink {
+    color: var(--muted);
+    font-weight: 900;
+    font-size: 13px;
+
+    padding: 8px 10px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+}
+
+.footerLink:hover {
+    color: var(--text);
+    border-color: var(--border);
+    background: var(--panel2);
 }
 
 /* =========================
-   Contact form (clean premium)
+   Bottom nav (mobile only)
    ========================= */
-.contactFormWrap {
-    margin-top: 16px;
+.bottomNav {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 14px;
+
+    z-index: 40;
+
+    display: none;
+    gap: 8px;
+
+    padding: 10px;
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--bg) 55%, transparent);
+    backdrop-filter: blur(12px);
+    box-shadow: var(--shadow-md);
 }
 
-.contactForm {
-    margin-top: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
+.bottomNavItem {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
 
-.formRow {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-}
-
-.field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    min-width: 0;
-}
-
-.field label {
-    display: block;
-    font-size: 13px;
-    font-weight: 950;
-    color: var(--muted);
-}
-
-.field input,
-.field textarea {
-    width: 100%;
     border: 1px solid var(--border);
     background: var(--panel);
-    color: var(--text);
 
-    border-radius: 14px;
-    padding: 12px 12px;
-    outline: none;
-    box-shadow: none;
-}
-
-.field textarea {
-    resize: vertical;
-    min-height: 140px;
-    line-height: 1.5;
-}
-
-.field input::placeholder,
-.field textarea::placeholder {
-    color: color-mix(in srgb, var(--muted) 70%, transparent);
-}
-
-.field input:focus,
-.field textarea:focus {
-    border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
-    box-shadow: 0 0 0 3px var(--focus);
-}
-
-.field input[aria-invalid="true"],
-.field textarea[aria-invalid="true"] {
-    border-color: #ff5a6a;
-    box-shadow: 0 0 0 3px color-mix(in srgb, #ff5a6a 25%, transparent);
-}
-
-.field .error {
-    margin-top: 6px;
-}
-
-/* Actions row */
-.formActions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-top: 4px;
-}
-
-.formStatus {
-    font-weight: 900;
     color: var(--muted);
+    cursor: pointer;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bottomNavItem:hover {
+    background: var(--panel2);
+    color: var(--text);
+}
+
+.bottomNavItem.active {
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+    color: var(--text);
 }
 
 /* =========================
    Responsive
    ========================= */
 @media (max-width: 900px) {
-    .projectsGrid {
+    .topNav {
+        display: none;
+    }
+
+    .heroInner {
         grid-template-columns: 1fr;
     }
 
-    .hero {
+    .projectsGrid {
         grid-template-columns: 1fr;
     }
 
@@ -914,13 +1241,22 @@ textarea:focus-visible,
         min-width: 160px;
     }
 
-    .topNav {
-        display: none;
+    .bottomNav {
+        display: inline-flex;
+    }
+
+    /* breathing room for bottom nav */
+    .content {
+        padding-bottom: 96px;
     }
 }
 
 @media (max-width: 640px) {
     .formRow {
         grid-template-columns: 1fr;
+    }
+
+    .tagTrigger {
+        min-width: 150px;
     }
 }

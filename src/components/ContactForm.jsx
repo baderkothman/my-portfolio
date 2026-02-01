@@ -1,16 +1,49 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import emailjs from "@emailjs/browser";
 
-const INITIAL_VALUES = {
+/**
+ * ContactForm
+ * -----------
+ * EmailJS contact form (client-only).
+ *
+ * Env vars (Vite):
+ * - VITE_EMAILJS_SERVICE_ID
+ * - VITE_EMAILJS_TEMPLATE_ID
+ * - VITE_EMAILJS_PUBLIC_KEY
+ *
+ * Notes:
+ * - Includes a honeypot field ("company") to reduce bot spam.
+ * - Accessible validation (aria-invalid + aria-describedby).
+ * - Auto-clears success/error messages after a short delay.
+ */
+
+const INITIAL_VALUES = Object.freeze({
   name: "",
   email: "",
   subject: "",
   message: "",
   company: "", // honeypot
-};
+});
 
 function isEmail(v) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || "").trim());
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v ?? "").trim());
+}
+
+function validate(values) {
+  const e = {};
+
+  if (!values.name.trim()) e.name = "Name is required.";
+  if (!values.email.trim()) e.email = "Email is required.";
+  else if (!isEmail(values.email)) e.email = "Enter a valid email address.";
+
+  if (!values.subject.trim()) e.subject = "Subject is required.";
+
+  if (!values.message.trim()) e.message = "Message is required.";
+  else if (values.message.trim().length < 15) {
+    e.message = "Message should be at least 15 characters.";
+  }
+
+  return e;
 }
 
 export default function ContactForm() {
@@ -18,40 +51,44 @@ export default function ContactForm() {
   const [touched, setTouched] = useState({});
   const [status, setStatus] = useState({ state: "idle", msg: "" });
 
-  const errors = useMemo(() => {
-    const e = {};
+  const statusTimerRef = useRef(null);
+  const sending = status.state === "sending";
 
-    if (!values.name.trim()) e.name = "Name is required.";
-    if (!values.email.trim()) e.email = "Email is required.";
-    else if (!isEmail(values.email)) e.email = "Enter a valid email address.";
-
-    if (!values.subject.trim()) e.subject = "Subject is required.";
-
-    if (!values.message.trim()) e.message = "Message is required.";
-    else if (values.message.trim().length < 15) {
-      e.message = "Message should be at least 15 characters.";
-    }
-
-    return e;
-  }, [values]);
-
+  const errors = useMemo(() => validate(values), [values]);
   const hasErrors = Object.keys(errors).length > 0;
-  const isSending = status.state === "sending";
 
-  function setField(name, value) {
-    setValues((p) => ({ ...p, [name]: value }));
-    // optional: clear status when user starts editing again
-    if (status.state !== "idle") setStatus({ state: "idle", msg: "" });
+  function clearStatusTimer() {
+    if (statusTimerRef.current) {
+      window.clearTimeout(statusTimerRef.current);
+      statusTimerRef.current = null;
+    }
   }
 
-  function onChange(e) {
-    const { name, value } = e.target;
-    setField(name, value);
+  function setTimedStatus(next) {
+    clearStatusTimer();
+    setStatus(next);
+
+    // Auto-clear only success/error (not sending)
+    if (next.state === "success" || next.state === "error") {
+      statusTimerRef.current = window.setTimeout(() => {
+        setStatus({ state: "idle", msg: "" });
+        statusTimerRef.current = null;
+      }, 4500);
+    }
   }
 
-  function onBlur(e) {
-    const key = e.target.name;
-    setTouched((p) => ({ ...p, [key]: true }));
+  useEffect(() => {
+    return () => {
+      clearStatusTimer();
+    };
+  }, []);
+
+  function markTouched(keys) {
+    setTouched((prev) => {
+      const next = { ...prev };
+      for (const k of keys) next[k] = true;
+      return next;
+    });
   }
 
   function showError(key) {
@@ -59,28 +96,50 @@ export default function ContactForm() {
   }
 
   function fieldAria(key) {
-    const show = showError(key);
+    const bad = showError(key);
     return {
-      "aria-invalid": show ? "true" : "false",
-      "aria-describedby": show ? `${key}-error` : undefined,
+      "aria-invalid": bad ? "true" : "false",
+      "aria-describedby": bad ? `${key}-error` : undefined,
     };
+  }
+
+  function onChange(e) {
+    const { name, value } = e.target;
+
+    // Clear message when user edits
+    if (status.state !== "idle") {
+      clearStatusTimer();
+      setStatus({ state: "idle", msg: "" });
+    }
+
+    setValues((p) => ({ ...p, [name]: value }));
+  }
+
+  function onBlur(e) {
+    const key = e.target.name;
+    setTouched((p) => ({ ...p, [key]: true }));
   }
 
   async function onSubmit(e) {
     e.preventDefault();
+    markTouched(["name", "email", "subject", "message"]);
 
-    setTouched({ name: true, email: true, subject: true, message: true });
-
-    // Honeypot: bots fill it
+    // Honeypot: if filled, pretend success (bots)
     if (values.company.trim()) {
-      setStatus({ state: "success", msg: "Thanks! Your message was sent." });
+      setTimedStatus({
+        state: "success",
+        msg: "Thanks! Your message was sent.",
+      });
       setValues(INITIAL_VALUES);
       setTouched({});
       return;
     }
 
     if (hasErrors) {
-      setStatus({ state: "error", msg: "Please fix the highlighted fields." });
+      setTimedStatus({
+        state: "error",
+        msg: "Please fix the highlighted fields.",
+      });
       return;
     }
 
@@ -89,7 +148,7 @@ export default function ContactForm() {
     const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
     if (!serviceId || !templateId || !publicKey) {
-      setStatus({
+      setTimedStatus({
         state: "error",
         msg: "Missing EmailJS env vars. Add them to .env.local and restart the dev server.",
       });
@@ -111,11 +170,14 @@ export default function ContactForm() {
         { publicKey },
       );
 
-      setStatus({ state: "success", msg: "Thanks! Your message was sent." });
       setValues(INITIAL_VALUES);
       setTouched({});
+      setTimedStatus({
+        state: "success",
+        msg: "Thanks! Your message was sent.",
+      });
     } catch {
-      setStatus({
+      setTimedStatus({
         state: "error",
         msg: "Failed to send. Please try again or contact me via email/LinkedIn.",
       });
@@ -124,7 +186,7 @@ export default function ContactForm() {
 
   return (
     <form className="contactForm" onSubmit={onSubmit} noValidate>
-      {/* Honeypot */}
+      {/* Honeypot (hidden from humans) */}
       <div className="hpWrap" aria-hidden="true">
         <label htmlFor="company">Company</label>
         <input
@@ -139,11 +201,8 @@ export default function ContactForm() {
 
       <div className="formRow">
         <div className="field">
-          <label className="fieldLabel" htmlFor="name">
-            Name
-          </label>
+          <label htmlFor="name">Name</label>
           <input
-            className={`fieldInput ${showError("name") ? "invalid" : ""}`}
             id="name"
             name="name"
             type="text"
@@ -151,22 +210,19 @@ export default function ContactForm() {
             onChange={onChange}
             onBlur={onBlur}
             autoComplete="name"
-            disabled={isSending}
+            disabled={sending}
             {...fieldAria("name")}
           />
           {showError("name") ? (
-            <div className="fieldError" id="name-error" role="alert">
+            <div className="error" id="name-error" role="alert">
               {errors.name}
             </div>
           ) : null}
         </div>
 
         <div className="field">
-          <label className="fieldLabel" htmlFor="email">
-            Email
-          </label>
+          <label htmlFor="email">Email</label>
           <input
-            className={`fieldInput ${showError("email") ? "invalid" : ""}`}
             id="email"
             name="email"
             type="email"
@@ -175,11 +231,11 @@ export default function ContactForm() {
             onBlur={onBlur}
             autoComplete="email"
             inputMode="email"
-            disabled={isSending}
+            disabled={sending}
             {...fieldAria("email")}
           />
           {showError("email") ? (
-            <div className="fieldError" id="email-error" role="alert">
+            <div className="error" id="email-error" role="alert">
               {errors.email}
             </div>
           ) : null}
@@ -187,54 +243,46 @@ export default function ContactForm() {
       </div>
 
       <div className="field">
-        <label className="fieldLabel" htmlFor="subject">
-          Subject
-        </label>
+        <label htmlFor="subject">Subject</label>
         <input
-          className={`fieldInput ${showError("subject") ? "invalid" : ""}`}
           id="subject"
           name="subject"
           type="text"
           value={values.subject}
           onChange={onChange}
           onBlur={onBlur}
-          disabled={isSending}
+          disabled={sending}
           {...fieldAria("subject")}
         />
         {showError("subject") ? (
-          <div className="fieldError" id="subject-error" role="alert">
+          <div className="error" id="subject-error" role="alert">
             {errors.subject}
           </div>
         ) : null}
       </div>
 
       <div className="field">
-        <label className="fieldLabel" htmlFor="message">
-          Message
-        </label>
+        <label htmlFor="message">Message</label>
         <textarea
-          className={`fieldInput fieldTextarea ${
-            showError("message") ? "invalid" : ""
-          }`}
           id="message"
           name="message"
           value={values.message}
           onChange={onChange}
           onBlur={onBlur}
           rows={6}
-          disabled={isSending}
+          disabled={sending}
           {...fieldAria("message")}
         />
         {showError("message") ? (
-          <div className="fieldError" id="message-error" role="alert">
+          <div className="error" id="message-error" role="alert">
             {errors.message}
           </div>
         ) : null}
       </div>
 
       <div className="formActions">
-        <button className="btnPrimary" type="submit" disabled={isSending}>
-          {isSending ? "Sending..." : "Send message"}
+        <button className="btnPrimary" type="submit" disabled={sending}>
+          {sending ? "Sending..." : "Send message"}
         </button>
 
         <div

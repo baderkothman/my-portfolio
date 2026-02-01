@@ -10,14 +10,22 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 
-const ICONS = {
+/**
+ * PostCard
+ * --------
+ * Clickable project card.
+ * - Accessible: role="button" + tabIndex + Enter/Space open
+ * - Links inside do NOT trigger open
+ */
+
+const ICONS = Object.freeze({
   geofence: MapPin,
   realestate: Home,
   pos: ShoppingCart,
   designsystem: Palette,
   api: Server,
   education: GraduationCap,
-};
+});
 
 function Icon({ iconKey, size = 18 }) {
   const Comp = ICONS[iconKey] || Briefcase;
@@ -25,59 +33,54 @@ function Icon({ iconKey, size = 18 }) {
 }
 
 function isValidUrl(v) {
-  if (!v) return false;
-  const s = String(v).trim();
+  const s = String(v ?? "").trim();
   return s.startsWith("http://") || s.startsWith("https://");
 }
 
 export default function PostCard({ post, onOpen }) {
   const safePost = post && typeof post === "object" ? post : null;
+  if (!safePost) return null;
 
-  const title = safePost?.title ? String(safePost.title) : "Untitled Project";
-  const caption = safePost?.caption
-    ? String(safePost.caption)
-    : "No description yet.";
+  const title = String(safePost.title || "Untitled Project");
+  const caption = String(safePost.caption || "No description yet.");
 
-  const repoUrl = safePost?.repoUrl ? String(safePost.repoUrl).trim() : "";
-  const demoUrl = safePost?.demoUrl ? String(safePost.demoUrl).trim() : "";
+  const repoUrl = String(safePost.repoUrl || "").trim();
+  const demoUrl = String(safePost.demoUrl || "").trim();
 
   const repoOk = isValidUrl(repoUrl);
   const demoOk = isValidUrl(demoUrl);
 
-  const tags = Array.isArray(safePost?.tags)
-    ? safePost.tags
-        .filter((t) => t != null && String(t).trim() !== "")
-        .map((t) => String(t))
+  const tags = Array.isArray(safePost.tags)
+    ? safePost.tags.map((t) => String(t ?? "").trim()).filter(Boolean)
     : [];
 
   function open() {
-    if (!safePost) return;
-    if (typeof onOpen === "function") onOpen(safePost);
+    onOpen?.(safePost);
   }
 
-  function stopOpen(e) {
-    // prevent opening modal when clicking a link
+  function onKeyDown(e) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      open();
+    }
+  }
+
+  function stop(e) {
     e.stopPropagation();
   }
 
-  function stopOpenOnKeyDown(e) {
-    // prevent bubbling Enter/Space from link to the card button
-    if (e.key === "Enter" || e.key === " ") e.stopPropagation();
-  }
-
-  // If post is missing, render nothing (avoids weird empty cards)
-  if (!safePost) return null;
-
   return (
-    <button
-      type="button"
+    <article
       className="projectCard"
+      role="button"
+      tabIndex={0}
       onClick={open}
+      onKeyDown={onKeyDown}
       aria-label={`Open details for ${title}`}
     >
       <div className="projectCardHeader">
         <span className="projectIcon" aria-hidden="true">
-          <Icon iconKey={safePost?.iconKey} />
+          <Icon iconKey={safePost.iconKey} />
         </span>
 
         <div style={{ minWidth: 0 }}>
@@ -110,8 +113,8 @@ export default function PostCard({ post, onOpen }) {
               href={repoUrl}
               target="_blank"
               rel="noreferrer"
-              onClick={stopOpen}
-              onKeyDown={stopOpenOnKeyDown}
+              onClick={stop}
+              onKeyDown={stop}
               aria-label={`Open repository for ${title}`}
             >
               <Github size={16} aria-hidden="true" />
@@ -125,8 +128,8 @@ export default function PostCard({ post, onOpen }) {
               href={demoUrl}
               target="_blank"
               rel="noreferrer"
-              onClick={stopOpen}
-              onKeyDown={stopOpenOnKeyDown}
+              onClick={stop}
+              onKeyDown={stop}
               aria-label={`Open live demo for ${title}`}
             >
               Demo <ArrowUpRight size={16} aria-hidden="true" />
@@ -138,6 +141,6 @@ export default function PostCard({ post, onOpen }) {
           View details <ArrowUpRight size={16} aria-hidden="true" />
         </span>
       </div>
-    </button>
+    </article>
   );
 }

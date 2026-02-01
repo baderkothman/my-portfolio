@@ -23,6 +23,7 @@ export default defineConfig([
       },
     },
     rules: {
+      "react-hooks/exhaustive-deps": "warn",
       "no-unused-vars": [
         "error",
         {

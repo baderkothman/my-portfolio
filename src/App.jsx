@@ -1,9 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
-import { Moon, Sun, Search, Mail, Github, ArrowUpRight } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Search } from "lucide-react";
+import { Routes, Route, Link } from "react-router-dom";
+
+import TopBar from "./components/TopBar";
+import BottomNav from "./components/BottomNav";
 import PostCard from "./components/PostCard";
 import PostModal from "./components/PostModal";
 import ContactForm from "./components/ContactForm";
-import { posts as postsData, profile as profileData } from "./data/profile";
+import TagDropdown from "./components/TagDropdown";
+import CvPage from "./pages/CvPage";
+
+import {
+  posts as postsData,
+  profile as profileData,
+  CV_URL,
+} from "./data/profile";
 
 function getLink(links, label) {
   const found = (links || []).find(
@@ -13,7 +24,8 @@ function getLink(links, label) {
 }
 
 function pick(v, fallback = "") {
-  return v == null || String(v).trim() === "" ? fallback : String(v);
+  const s = String(v ?? "").trim();
+  return s ? s : fallback;
 }
 
 function safeGetTheme() {
@@ -30,38 +42,27 @@ function safeGetTheme() {
   return prefersDark ? "dark" : "light";
 }
 
-export default function App() {
-  // ✅ Stabilize imported data (prevents exhaustive-deps warnings)
-  const profile = useMemo(() => profileData || {}, []);
-  const posts = useMemo(() => (Array.isArray(postsData) ? postsData : []), []);
+function HomePage({ theme, setTheme }) {
+  const profile = profileData || {};
+  const posts = Array.isArray(postsData) ? postsData : [];
 
   const [activePost, setActivePost] = useState(null);
   const [query, setQuery] = useState("");
   const [tag, setTag] = useState("all");
-
-  const [theme, setTheme] = useState(() => safeGetTheme());
-
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-
-    try {
-      localStorage.setItem("theme", theme);
-    } catch {
-      // ignore
-    }
-  }, [theme]);
+  const [activeSection, setActiveSection] = useState("top");
 
   const allTags = useMemo(() => {
-    const set = new Set();
-    for (const p of posts) for (const t of p?.tags || []) set.add(t);
-    return ["all", ...Array.from(set).sort((a, b) => a.localeCompare(b))];
+    const set = new Set(["all"]);
+    for (const p of posts) for (const t of p?.tags || []) set.add(String(t));
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [posts]);
 
   const filteredPosts = useMemo(() => {
     const q = query.trim().toLowerCase();
 
     return posts.filter((p) => {
-      const matchesTag = tag === "all" ? true : (p?.tags || []).includes(tag);
+      const tags = Array.isArray(p?.tags) ? p.tags : [];
+      const matchesTag = tag === "all" ? true : tags.includes(tag);
 
       const matchesQuery = !q
         ? true
@@ -71,17 +72,50 @@ export default function App() {
           String(p?.caption || "")
             .toLowerCase()
             .includes(q) ||
-          (p?.tags || []).some((t) => String(t).toLowerCase().includes(q));
+          tags.some((t) => String(t).toLowerCase().includes(q));
 
       return matchesTag && matchesQuery;
     });
   }, [posts, query, tag]);
 
+  const scrollToId = useCallback((id) => {
+    if (id === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
+  useEffect(() => {
+    const ids = ["top", "about", "projects", "contact"];
+    const els = ids.map((id) => document.getElementById(id)).filter(Boolean);
+
+    if (!els.length) return;
+
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort(
+            (a, b) => (b.intersectionRatio || 0) - (a.intersectionRatio || 0),
+          )[0];
+
+        if (visible?.target?.id) setActiveSection(visible.target.id);
+      },
+      { root: null, threshold: [0.15, 0.25, 0.4, 0.6] },
+    );
+
+    els.forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
+
   const name = pick(profile.name, "Your Name");
   const headline = pick(profile.title, "Full-Stack Developer");
-  const location = pick(profile.location, "Lebanon");
+  const location = pick(profile.location, "");
 
-  const about =
+  const aboutText =
     Array.isArray(profile.bioLines) && profile.bioLines.length
       ? profile.bioLines.join(" ")
       : "I build reliable, scalable web apps with clean UI and strong fundamentals.";
@@ -101,96 +135,62 @@ export default function App() {
         Skip to content
       </a>
 
-      <header className="topBar">
-        <div className="topBarInner">
-          <div className="brand">
-            <span className="brandMark" aria-hidden="true" />
-            <span className="brandText">{name}</span>
-          </div>
-
-          <nav className="topNav" aria-label="Primary">
-            <a className="topNavLink" href="#projects">
-              Projects
-            </a>
-            <a className="topNavLink" href="#about">
-              About
-            </a>
-            <a className="topNavLink" href="#contact">
-              Contact
-            </a>
-          </nav>
-
-          <div className="topBarActions">
-            <button
-              className="iconBtn"
-              type="button"
-              aria-label="Toggle theme"
-              aria-pressed={theme === "dark"}
-              onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
-            >
-              {theme === "dark" ? (
-                <Sun size={18} aria-hidden="true" />
-              ) : (
-                <Moon size={18} aria-hidden="true" />
-              )}
-            </button>
-          </div>
-        </div>
-      </header>
+      <TopBar
+        name={name}
+        theme={theme}
+        onToggleTheme={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
+        showNav
+      />
 
       <main id="main" className="content">
-        {/* HERO */}
-        <section className="hero card">
-          <div className="heroLeft">
-            <h1 className="heroTitle">{headline}</h1>
-            <p className="heroSub">
-              <span className="muted">{location}</span>
-            </p>
+        {/* HERO / TOP */}
+        <section id="top" className="section card sectionCard hero">
+          <div className="heroInner">
+            <div className="heroLeft">
+              <div className="heroKicker muted">
+                {location ? location : "Available for work"}
+              </div>
+              <h1 className="heroTitle">{name}</h1>
+              <div className="heroSubtitle">{headline}</div>
+              <p className="heroDesc muted">{aboutText}</p>
 
-            <p className="heroAbout">{about}</p>
+              <div className="heroActions" aria-label="Primary actions">
+                <Link className="btnPrimary" to="/cv">
+                  View CV
+                </Link>
+              </div>
+            </div>
 
-            <div className="heroCtas">
-              {email ? (
-                <a className="btnPrimary" href={`mailto:${email}`}>
-                  <Mail size={16} aria-hidden="true" />
-                  Email
-                </a>
-              ) : null}
-
-              {github ? (
-                <a
-                  className="btnGhost"
-                  href={github}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <Github size={16} aria-hidden="true" />
-                  GitHub <ArrowUpRight size={16} aria-hidden="true" />
-                </a>
-              ) : null}
-
-              {linkedin ? (
-                <a
-                  className="btnGhost"
-                  href={linkedin}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  LinkedIn <ArrowUpRight size={16} aria-hidden="true" />
-                </a>
-              ) : null}
+            <div className="heroRight" aria-label="Highlights">
+              <div className="statGrid">
+                {highlights.map((x) => (
+                  <div className="statCard" key={x}>
+                    <div className="statText">{x}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
+        </section>
 
-          <div className="heroRight">
-            <div className="statGrid" aria-label="Highlights">
-              {highlights.map((x) => (
-                <div className="statCard" key={x}>
-                  <div className="statText">{x}</div>
-                </div>
-              ))}
-            </div>
-          </div>
+        {/* ABOUT */}
+        <section id="about" className="section card sectionCard">
+          <h2 className="sectionTitle">About</h2>
+
+          <p className="bodyText">{aboutText}</p>
+
+          {Array.isArray(profile.skills) && profile.skills.length ? (
+            <>
+              <h3 className="sectionSubtitle">Core skills</h3>
+              <div className="chips" aria-label="Skills">
+                {profile.skills.slice(0, 18).map((s) => (
+                  <span className="chip" key={s}>
+                    {s}
+                  </span>
+                ))}
+              </div>
+            </>
+          ) : null}
         </section>
 
         {/* PROJECTS */}
@@ -210,18 +210,12 @@ export default function App() {
                 />
               </div>
 
-              <select
-                className="select"
+              <TagDropdown
                 value={tag}
-                onChange={(e) => setTag(e.target.value)}
-                aria-label="Filter by tag"
-              >
-                {allTags.map((t) => (
-                  <option key={t} value={t}>
-                    {t === "all" ? "All tags" : t}
-                  </option>
-                ))}
-              </select>
+                options={allTags}
+                onChange={setTag}
+                placeholder="All tags"
+              />
             </div>
           </div>
 
@@ -234,63 +228,44 @@ export default function App() {
           </div>
         </section>
 
-        {/* ABOUT */}
-        <section id="about" className="section card sectionCard">
-          <h2 className="sectionTitle">About</h2>
-          <p className="bodyText">{about}</p>
-
-          {Array.isArray(profile.skills) && profile.skills.length ? (
-            <>
-              <h3 className="sectionSubtitle">Core skills</h3>
-              <div className="chips" aria-label="Skills">
-                {profile.skills.slice(0, 18).map((s) => (
-                  <span className="chip" key={s}>
-                    {s}
-                  </span>
-                ))}
-              </div>
-            </>
-          ) : null}
-        </section>
-
         {/* CONTACT */}
         <section id="contact" className="section card sectionCard">
           <h2 className="sectionTitle">Contact</h2>
           <p className="bodyText muted">
-            Want to collaborate or review a project? Reach out:
+            Want to collaborate or review a project? Send a message:
           </p>
-
-          <div className="contactRow">
-            {email ? (
-              <a className="linkPill" href={`mailto:${email}`}>
-                Email
-              </a>
-            ) : null}
-
-            {github ? (
-              <a
-                className="linkPill"
-                href={github}
-                target="_blank"
-                rel="noreferrer"
-              >
-                GitHub
-              </a>
-            ) : null}
-
-            {linkedin ? (
-              <a
-                className="linkPill"
-                href={linkedin}
-                target="_blank"
-                rel="noreferrer"
-              >
-                LinkedIn
-              </a>
-            ) : null}
-          </div>
-
-          {/* ✅ CONTACT FORM (your existing component) */}
+          {email || github || linkedin ? (
+            <>
+              <h3 className="sectionSubtitle">Direct links</h3>
+              <div className="contactRow" aria-label="Contact links">
+                {email ? (
+                  <a className="linkPill" href={`mailto:${email}`}>
+                    Email
+                  </a>
+                ) : null}
+                {github ? (
+                  <a
+                    className="linkPill"
+                    href={github}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    GitHub
+                  </a>
+                ) : null}
+                {linkedin ? (
+                  <a
+                    className="linkPill"
+                    href={linkedin}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    LinkedIn
+                  </a>
+                ) : null}
+              </div>
+            </>
+          ) : null}
           <div className="contactFormWrap">
             <h3 className="sectionSubtitle">Send a message</h3>
             <ContactForm />
@@ -298,13 +273,52 @@ export default function App() {
         </section>
       </main>
 
-      <footer className="footer muted">
-        <div className="content footerInner">
-          Built with React · {new Date().getFullYear()}
-        </div>
-      </footer>
-
+      <BottomNav activeId={activeSection} onNavigate={scrollToId} />
       <PostModal post={activePost} onClose={() => setActivePost(null)} />
     </div>
+  );
+}
+
+export default function App() {
+  const [theme, setTheme] = useState(() => safeGetTheme());
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+
+    try {
+      localStorage.setItem("theme", theme);
+    } catch {
+      // ignore
+    }
+
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute("content", theme === "dark" ? "#0b0f14" : "#f7f7fb");
+    }
+  }, [theme]);
+
+  return (
+    <Routes>
+      <Route
+        path="/"
+        element={<HomePage theme={theme} setTheme={setTheme} />}
+      />
+      <Route
+        path="/cv"
+        element={
+          <CvPage
+            theme={theme}
+            onToggleTheme={() =>
+              setTheme((t) => (t === "dark" ? "light" : "dark"))
+            }
+            cvUrl={"Bader_Othman_CV.pdf"}
+          />
+        }
+      />
+      <Route
+        path="*"
+        element={<HomePage theme={theme} setTheme={setTheme} />}
+      />
+    </Routes>
   );
 }

@@ -1,54 +1,75 @@
-import { Github, Mail, MoreHorizontal } from "lucide-react";
+import { Moon, Sun, ArrowLeft } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 
-function getLink(links, label) {
-  const found = (links || []).find(
-    (x) => String(x.label || "").toLowerCase() === String(label).toLowerCase(),
-  );
-  return found?.value ? String(found.value).trim() : "";
-}
-
-export default function TopBar({ title, username, profile }) {
-  const links = profile?.links || [];
-  const github = getLink(links, "GitHub");
-  const email = getLink(links, "Email");
-  const mailto = email ? `mailto:${email}` : "";
-
-  const displayName = username || profile?.username || "portfolio";
+/**
+ * TopBar
+ * ------
+ * Sticky header:
+ * - On home: brand links to #top
+ * - On /cv: back button + brand links to /
+ */
+export default function TopBar({ name, theme, onToggleTheme, showNav = true }) {
+  const location = useLocation();
+  const isCv = location.pathname === "/cv";
 
   return (
-    <header className="topBar" aria-label="Top bar">
+    <header className="topBar" aria-label="Site header">
       <div className="topBarInner">
-        <div className="brand" aria-label="Brand">
-          <span className="brandMark" aria-hidden="true" />
-          <span className="brandText">{displayName}</span>
+        <div className="topBarLeft">
+          {isCv ? (
+            <Link
+              className="iconBtn"
+              to="/"
+              aria-label="Back to home"
+              title="Back"
+            >
+              <ArrowLeft size={18} aria-hidden="true" />
+            </Link>
+          ) : null}
+
+          {isCv ? (
+            <Link className="brand" to="/" aria-label="Go to home">
+              <span className="brandMark" aria-hidden="true" />
+              <span className="brandText">{name}</span>
+            </Link>
+          ) : (
+            <a className="brand" href="#top" aria-label="Go to top">
+              <span className="brandMark" aria-hidden="true" />
+              <span className="brandText">{name}</span>
+            </a>
+          )}
         </div>
 
-        <div className="topBarTitle" aria-label="Current section">
-          {title}
-        </div>
+        {showNav ? (
+          <nav className="topNav" aria-label="Primary">
+            <a className="topNavLink" href="#about">
+              About
+            </a>
+            <a className="topNavLink" href="#projects">
+              Projects
+            </a>
+            <a className="topNavLink" href="#contact">
+              Contact
+            </a>
+          </nav>
+        ) : (
+          <div />
+        )}
 
         <div className="topBarActions">
-          {github ? (
-            <a
-              className="iconBtn"
-              href={github}
-              target="_blank"
-              rel="noreferrer"
-              aria-label="GitHub"
-            >
-              <Github size={18} aria-hidden="true" />
-            </a>
-          ) : null}
-
-          {mailto ? (
-            <a className="iconBtn" href={mailto} aria-label="Email">
-              <Mail size={18} aria-hidden="true" />
-            </a>
-          ) : null}
-
-          {/* Placeholder for future actions/menu */}
-          <button className="iconBtn" type="button" aria-label="More actions">
-            <MoreHorizontal size={18} aria-hidden="true" />
+          <button
+            className="iconBtn"
+            type="button"
+            aria-label="Toggle theme"
+            aria-pressed={theme === "dark"}
+            onClick={onToggleTheme}
+            title="Toggle theme"
+          >
+            {theme === "dark" ? (
+              <Sun size={18} aria-hidden="true" />
+            ) : (
+              <Moon size={18} aria-hidden="true" />
+            )}
           </button>
         </div>
       </div>

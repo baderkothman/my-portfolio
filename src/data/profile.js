@@ -1,3 +1,36 @@
+/**
+ * Data model for portfolio content.
+ */
+
+/**
+ * @typedef {{ label: string, value: string }} ProfileLink
+ * @typedef {{
+ *  id: string,
+ *  title: string,
+ *  caption: string,
+ *  tags: string[],
+ *  repoUrl?: string,
+ *  demoUrl?: string,
+ *  iconKey?: string,
+ *  details?: string[],
+ *  metrics?: string[],
+ * }} Post
+ *
+ * @typedef {{
+ *  name: string,
+ *  username: string,
+ *  title: string,
+ *  location: string,
+ *  bioLines: string[],
+ *  links: ProfileLink[],
+ *  stats: { posts: number, projects: number, years: string },
+ *  skills: string[],
+ * }} Profile
+ */
+
+export const CV_URL = "/Bader_Othman_CV.pdf";
+
+/** @type {Post[]} */
 export const posts = [
   {
     id: "geo-1",
@@ -5,8 +38,8 @@ export const posts = [
     caption:
       "Admin dashboard + Flutter apps. Circular zones, enter/exit alerts, logs, CSV export.",
     tags: ["Flutter", "Next.js", "SQL", "Maps"],
-    repoUrl: "", // put your repo link here when ready
-    demoUrl: "", // optional
+    repoUrl: "",
+    demoUrl: "",
     iconKey: "geofence",
     details: [
       "Admin dashboard (web): user management, zones configuration, alerts + export.",
@@ -40,7 +73,7 @@ export const posts = [
     demoUrl: "",
     iconKey: "pos",
     details: [
-      "Barcode scan -> product lookup -> cart -> receipt.",
+      "Barcode scan → product lookup → cart → receipt.",
       "Inventory import, stock adjustments, sales reports and auditing.",
     ],
     metrics: ["Workflow-first design", "Report-friendly data model"],
@@ -92,9 +125,9 @@ export const posts = [
   },
 ];
 
-// small helper: safe stats if someone edits posts later
 const postCount = Array.isArray(posts) ? posts.length : 0;
 
+/** @type {Profile} */
 export const profile = {
   name: "Bader Othman",
   username: "baderkothman",

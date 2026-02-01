@@ -1,27 +1,38 @@
-import { User, Briefcase, Layers, Mail } from "lucide-react";
+import { Home, Briefcase, User, Mail } from "lucide-react";
 
-const navItems = [
-  { key: "profile", label: "Overview", Icon: User },
-  { key: "projects", label: "Work", Icon: Briefcase },
-  { key: "skills", label: "Skills", Icon: Layers },
-  { key: "contact", label: "Contact", Icon: Mail },
+/**
+ * BottomNav
+ * ---------
+ * Mobile-only bottom navigation.
+ *
+ * Props:
+ * - activeId: string
+ * - onNavigate: (id: string) => void
+ */
+const NAV_ITEMS = [
+  { id: "top", label: "Home", Icon: Home },
+  { id: "about", label: "About", Icon: User },
+  { id: "projects", label: "Projects", Icon: Briefcase },
+  { id: "contact", label: "Contact", Icon: Mail },
 ];
 
-export default function BottomNav({ active, onChange }) {
+export default function BottomNav({ activeId = "top", onNavigate }) {
   return (
     <nav className="bottomNav" aria-label="Bottom navigation">
-      {navItems.map(({ key, label, Icon }) => {
-        const isActive = active === key;
+      {NAV_ITEMS.map(({ id, label, Icon }) => {
+        const isActive = activeId === id;
+
         return (
           <button
-            key={key}
+            key={id}
             className={`bottomNavItem ${isActive ? "active" : ""}`}
-            onClick={() => onChange(key)}
             type="button"
+            onClick={() => onNavigate?.(id)}
             aria-label={label}
             aria-current={isActive ? "page" : undefined}
+            title={label}
           >
-            <Icon size={22} aria-hidden="true" />
+            <Icon size={20} aria-hidden="true" />
           </button>
         );
       })}

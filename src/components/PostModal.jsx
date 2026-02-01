@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   MapPin,
   Home,
@@ -14,14 +14,28 @@ import {
   Check,
 } from "lucide-react";
 
-const ICONS = {
+/**
+ * PostModal
+ * --------
+ * Accessible modal dialog for a "post/project".
+ *
+ * Behaviors:
+ * - ESC closes
+ * - Click overlay closes (outside sheet)
+ * - Focus trap
+ * - Locks background scroll
+ * - Restores focus to opener
+ * - Safe clipboard copy (with fallback)
+ */
+
+const ICONS = Object.freeze({
   geofence: MapPin,
   realestate: Home,
   pos: ShoppingCart,
   designsystem: Palette,
   api: Server,
   education: GraduationCap,
-};
+});
 
 function Icon({ iconKey, size = 22 }) {
   const Comp = ICONS[iconKey] || Briefcase;
@@ -29,9 +43,18 @@ function Icon({ iconKey, size = 22 }) {
 }
 
 function isValidUrl(v) {
-  if (!v) return false;
-  const s = String(v).trim();
+  const s = String(v ?? "").trim();
   return s.startsWith("http://") || s.startsWith("https://");
+}
+
+function toCleanString(v, fallback = "") {
+  const s = String(v ?? "").trim();
+  return s ? s : fallback;
+}
+
+function normalizeStringArray(v) {
+  if (!Array.isArray(v)) return [];
+  return v.map((x) => String(x ?? "").trim()).filter(Boolean);
 }
 
 function getFocusable(container) {
@@ -53,9 +76,12 @@ function getFocusable(container) {
 }
 
 async function safeCopy(text) {
+  const value = String(text ?? "");
+  if (!value) return false;
+
   try {
     if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(value);
       return true;
     }
   } catch {
@@ -64,7 +90,7 @@ async function safeCopy(text) {
 
   try {
     const ta = document.createElement("textarea");
-    ta.value = text;
+    ta.value = value;
     ta.setAttribute("readonly", "true");
     ta.style.position = "fixed";
     ta.style.left = "-9999px";
@@ -78,67 +104,120 @@ async function safeCopy(text) {
   }
 }
 
-export default function PostModal({ post, onClose }) {
+function PostModal({ post, onClose }) {
   const closeBtnRef = useRef(null);
   const sheetRef = useRef(null);
   const lastActiveRef = useRef(null);
-
-  const [copied, setCopied] = useState(false);
-  const [copyError, setCopyError] = useState("");
+  const copiedTimerRef = useRef(null);
 
   const safePost = post && typeof post === "object" ? post : null;
 
-  const repoUrl = safePost?.repoUrl ? String(safePost.repoUrl).trim() : "";
-  const demoUrl = safePost?.demoUrl ? String(safePost.demoUrl).trim() : "";
+  const vm = useMemo(() => {
+    if (!safePost) return null;
 
-  const hasRepo = useMemo(() => isValidUrl(repoUrl), [repoUrl]);
-  const hasDemo = useMemo(() => isValidUrl(demoUrl), [demoUrl]);
+    const id = toCleanString(safePost.id, "x");
+    const title = toCleanString(safePost.title, "Project");
+    const caption = toCleanString(safePost.caption, "");
 
-  const titleText = safePost?.title ? String(safePost.title) : "Project";
-  const captionText = safePost?.caption ? String(safePost.caption) : "";
+    const repoUrl = toCleanString(safePost.repoUrl, "");
+    const demoUrl = toCleanString(safePost.demoUrl, "");
 
-  const titleId = `modal-title-${safePost?.id || "x"}`;
-  const descId = `modal-desc-${safePost?.id || "x"}`;
+    return {
+      id,
+      title,
+      caption,
+      iconKey: safePost.iconKey,
+      repoUrl,
+      demoUrl,
+      hasRepo: isValidUrl(repoUrl),
+      hasDemo: isValidUrl(demoUrl),
+      tags: normalizeStringArray(safePost.tags),
+      details: normalizeStringArray(safePost.details),
+      metrics: normalizeStringArray(safePost.metrics),
+    };
+  }, [safePost]);
 
-  const tags = Array.isArray(safePost?.tags)
-    ? safePost.tags.filter(Boolean).map(String)
-    : [];
+  const titleId = vm ? `modal-title-${vm.id}` : "modal-title-x";
+  const descId = vm ? `modal-desc-${vm.id}` : "modal-desc-x";
 
-  const details = Array.isArray(safePost?.details)
-    ? safePost.details.filter(Boolean).map(String)
-    : [];
+  // Copy UI stored per modal id so it doesn't require effect resets.
+  const [copyUi, setCopyUi] = useState(() => ({
+    forId: "",
+    copied: false,
+    error: "",
+  }));
 
-  const metrics = Array.isArray(safePost?.metrics)
-    ? safePost.metrics.filter(Boolean).map(String)
-    : [];
+  const copied = vm && copyUi.forId === vm.id ? copyUi.copied : false;
+  const copyError = vm && copyUi.forId === vm.id ? copyUi.error : "";
+
+  const requestClose = useCallback(() => {
+    onClose?.();
+  }, [onClose]);
+
+  const onOverlayClick = useCallback(
+    (e) => {
+      if (e.target === e.currentTarget) requestClose();
+    },
+    [requestClose],
+  );
+
+  const onCopyRepo = useCallback(async () => {
+    if (!vm) return;
+
+    if (copiedTimerRef.current) {
+      window.clearTimeout(copiedTimerRef.current);
+      copiedTimerRef.current = null;
+    }
+
+    if (!vm.hasRepo) {
+      setCopyUi({
+        forId: vm.id,
+        copied: false,
+        error: "Repository link is missing.",
+      });
+      return;
+    }
+
+    const ok = await safeCopy(vm.repoUrl);
+
+    if (ok) {
+      setCopyUi({ forId: vm.id, copied: true, error: "" });
+      copiedTimerRef.current = window.setTimeout(() => {
+        setCopyUi({ forId: vm.id, copied: false, error: "" });
+        copiedTimerRef.current = null;
+      }, 1400);
+    } else {
+      setCopyUi({
+        forId: vm.id,
+        copied: false,
+        error: "Copy failed. Please copy the link manually.",
+      });
+    }
+  }, [vm]);
 
   useEffect(() => {
-    if (!safePost) return;
+    if (!vm) return;
 
-    let alive = true;
-
-    // reset UI states on open
-    const resetId = window.setTimeout(() => {
-      if (!alive) return;
-      setCopied(false);
-      setCopyError("");
-    }, 0);
-
-    // remember opener
     lastActiveRef.current = document.activeElement;
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const focusId = window.setTimeout(() => {
+      closeBtnRef.current?.focus();
+    }, 0);
 
     function onKeyDown(e) {
       if (e.key === "Escape") {
         e.preventDefault();
-        onClose?.();
+        requestClose();
         return;
       }
 
-      // focus trap
       if (e.key === "Tab") {
         const container = sheetRef.current;
         const focusables = getFocusable(container);
-        if (focusables.length === 0) return;
+        if (!focusables.length) return;
 
         const first = focusables[0];
         const last = focusables[focusables.length - 1];
@@ -160,55 +239,24 @@ export default function PostModal({ post, onClose }) {
 
     window.addEventListener("keydown", onKeyDown);
 
-    // lock background scroll
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    // focus close button
-    const focusId = window.setTimeout(() => {
-      closeBtnRef.current?.focus();
-    }, 0);
-
     return () => {
-      alive = false;
-      window.clearTimeout(resetId);
       window.clearTimeout(focusId);
       window.removeEventListener("keydown", onKeyDown);
-
       document.body.style.overflow = prevOverflow;
 
-      // restore focus
+      if (copiedTimerRef.current) {
+        window.clearTimeout(copiedTimerRef.current);
+        copiedTimerRef.current = null;
+      }
+
       const el = lastActiveRef.current;
       if (el && typeof el.focus === "function") {
         window.setTimeout(() => el.focus(), 0);
       }
     };
-  }, [safePost, onClose]);
+  }, [vm, requestClose]);
 
-  if (!safePost) return null;
-
-  async function onCopyRepo() {
-    setCopyError("");
-    setCopied(false);
-
-    if (!hasRepo) {
-      setCopyError("Repository link is missing.");
-      return;
-    }
-
-    const ok = await safeCopy(repoUrl);
-    if (ok) {
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1400);
-    } else {
-      setCopyError("Copy failed. Please copy the link manually.");
-    }
-  }
-
-  function onOverlayClick(e) {
-    // close only if click is on overlay itself
-    if (e.target === e.currentTarget) onClose?.();
-  }
+  if (!vm) return null;
 
   return (
     <div
@@ -223,22 +271,22 @@ export default function PostModal({ post, onClose }) {
         <div className="modalSheetTop">
           <div className="modalSheetTitleRow">
             <span className="modalMark" aria-hidden="true">
-              <Icon iconKey={safePost?.iconKey} size={20} />
+              <Icon iconKey={vm.iconKey} size={20} />
             </span>
 
             <div className="modalSheetHead">
               <div className="modalTitle" id={titleId}>
-                {titleText}
+                {vm.title}
               </div>
               <div className="modalCaption" id={descId}>
-                {captionText}
+                {vm.caption}
               </div>
             </div>
 
             <button
               ref={closeBtnRef}
               className="modalClose"
-              onClick={() => onClose?.()}
+              onClick={requestClose}
               aria-label="Close dialog"
               type="button"
             >
@@ -246,10 +294,10 @@ export default function PostModal({ post, onClose }) {
             </button>
           </div>
 
-          {tags.length ? (
+          {vm.tags.length ? (
             <div className="modalTags" aria-label="Tech stack">
-              {tags.map((t, idx) => (
-                <span className="pill" key={`${t}-${idx}`}>
+              {vm.tags.map((t) => (
+                <span className="pill" key={t}>
                   {t}
                 </span>
               ))}
@@ -268,16 +316,16 @@ export default function PostModal({ post, onClose }) {
                   <div className="linkRowText">
                     <div className="linkRowTitle">Repository</div>
                     <div className="linkRowValue">
-                      {hasRepo ? repoUrl : "Not provided yet"}
+                      {vm.hasRepo ? vm.repoUrl : "Not provided yet"}
                     </div>
                   </div>
                 </div>
 
                 <div className="linkRowActions">
-                  {hasRepo ? (
+                  {vm.hasRepo ? (
                     <a
                       className="btnPrimary"
-                      href={repoUrl}
+                      href={vm.repoUrl}
                       target="_blank"
                       rel="noreferrer"
                     >
@@ -309,20 +357,20 @@ export default function PostModal({ post, onClose }) {
                 </div>
               </div>
 
-              {hasDemo ? (
+              {vm.hasDemo ? (
                 <div className="linkRow">
                   <div className="linkRowLeft">
                     <ExternalLink size={16} aria-hidden="true" />
                     <div className="linkRowText">
                       <div className="linkRowTitle">Live demo</div>
-                      <div className="linkRowValue">{demoUrl}</div>
+                      <div className="linkRowValue">{vm.demoUrl}</div>
                     </div>
                   </div>
 
                   <div className="linkRowActions">
                     <a
                       className="btnGhost"
-                      href={demoUrl}
+                      href={vm.demoUrl}
                       target="_blank"
                       rel="noreferrer"
                     >
@@ -337,23 +385,23 @@ export default function PostModal({ post, onClose }) {
             </div>
           </div>
 
-          {details.length ? (
+          {vm.details.length ? (
             <div className="modalSection">
               <div className="sectionLabel">What I built</div>
               <ul className="bullets">
-                {details.map((d, idx) => (
-                  <li key={`${safePost?.id || "x"}-d-${idx}`}>{d}</li>
+                {vm.details.map((d) => (
+                  <li key={d}>{d}</li>
                 ))}
               </ul>
             </div>
           ) : null}
 
-          {metrics.length ? (
+          {vm.metrics.length ? (
             <div className="modalSection">
               <div className="sectionLabel">Highlights</div>
               <div className="chips">
-                {metrics.map((m, idx) => (
-                  <span className="chip" key={`${m}-${idx}`}>
+                {vm.metrics.map((m) => (
+                  <span className="chip" key={m}>
                     {m}
                   </span>
                 ))}
@@ -367,3 +415,5 @@ export default function PostModal({ post, onClose }) {
     </div>
   );
 }
+
+export default memo(PostModal);
