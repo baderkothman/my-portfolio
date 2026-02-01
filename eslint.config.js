@@ -1,37 +1,37 @@
 import js from "@eslint/js";
 import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
-import reactRefresh from "eslint-plugin-react-refresh";
+import { reactRefresh } from "eslint-plugin-react-refresh";
 import { defineConfig, globalIgnores } from "eslint/config";
 
 export default defineConfig([
   globalIgnores(["dist"]),
   {
     files: ["**/*.{js,jsx}"],
-    extends: [
-      js.configs.recommended,
-      reactHooks.configs.flat.recommended,
-      reactRefresh.configs.vite,
-    ],
     languageOptions: {
-      ecmaVersion: 2020,
+      ecmaVersion: "latest",
+      sourceType: "module",
       globals: globals.browser,
       parserOptions: {
-        ecmaVersion: "latest",
         ecmaFeatures: { jsx: true },
-        sourceType: "module",
       },
     },
+    plugins: {
+      "react-hooks": reactHooks,
+      "react-refresh": reactRefresh,
+    },
     rules: {
+      ...js.configs.recommended.rules,
+      ...reactHooks.configs.recommended.rules,
+      ...reactRefresh.configs.vite().rules,
+
+      // your overrides:
       "react-hooks/exhaustive-deps": "warn",
       "no-unused-vars": [
         "error",
         {
-          // ignore React component-like names (Icon, Component, etc.)
           varsIgnorePattern: "^[A-Z_]",
           argsIgnorePattern: "^[A-Z_]",
-
-          // optional: common good defaults
           ignoreRestSiblings: true,
           caughtErrorsIgnorePattern: "^_",
         },

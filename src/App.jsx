@@ -43,8 +43,14 @@ function safeGetTheme() {
 }
 
 function HomePage({ theme, setTheme }) {
-  const profile = profileData || {};
-  const posts = Array.isArray(postsData) ? postsData : [];
+  // ✅ memoize normalized imports (removes your ESLint warning)
+  const profile = useMemo(() => {
+    return profileData && typeof profileData === "object" ? profileData : {};
+  }, []);
+
+  const posts = useMemo(() => {
+    return Array.isArray(postsData) ? postsData : [];
+  }, []);
 
   const [activePost, setActivePost] = useState(null);
   const [query, setQuery] = useState("");
@@ -234,6 +240,7 @@ function HomePage({ theme, setTheme }) {
           <p className="bodyText muted">
             Want to collaborate or review a project? Send a message:
           </p>
+
           {email || github || linkedin ? (
             <>
               <h3 className="sectionSubtitle">Direct links</h3>
@@ -266,6 +273,7 @@ function HomePage({ theme, setTheme }) {
               </div>
             </>
           ) : null}
+
           <div className="contactFormWrap">
             <h3 className="sectionSubtitle">Send a message</h3>
             <ContactForm />
@@ -311,7 +319,7 @@ export default function App() {
             onToggleTheme={() =>
               setTheme((t) => (t === "dark" ? "light" : "dark"))
             }
-            cvUrl={"Bader_Othman_CV.pdf"}
+            cvUrl={CV_URL}
           />
         }
       />
