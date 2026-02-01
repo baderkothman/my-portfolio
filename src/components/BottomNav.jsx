@@ -10,7 +10,6 @@ import { Home, Briefcase, User, Mail } from "lucide-react";
  * - onNavigate: (id: string) => void
  */
 const NAV_ITEMS = [
-  { id: "top", label: "Home", Icon: Home },
   { id: "about", label: "About", Icon: User },
   { id: "projects", label: "Projects", Icon: Briefcase },
   { id: "contact", label: "Contact", Icon: Mail },
