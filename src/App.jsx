@@ -144,6 +144,7 @@ function HomePage({ theme, setTheme }) {
       <TopBar
         name={name}
         theme={theme}
+        avatarUrl="/avatar.jpg" // ✅ add this
         onToggleTheme={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
         showNav
       />

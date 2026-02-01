@@ -246,14 +246,144 @@ section[id] {
     letter-spacing: -0.2px;
 }
 
-.brandMark {
-    width: 22px;
-    height: 22px;
-    border-radius: 8px;
+/* Bigger brand mark + avatar */
+.brandMark,
+.brandAvatar {
+    width: 34px;
+    /* ✅ bigger (try 36 if you want) */
+    height: 34px;
+    border-radius: 999px;
+    /* ✅ circle */
     border: 1px solid var(--border);
+    flex: 0 0 auto;
+}
+
+/* fallback mark (when no image) */
+.brandMark {
     background: radial-gradient(circle at 30% 30%,
             rgba(124, 92, 255, 0.85),
             rgba(76, 196, 255, 0.5));
+}
+
+/* real image avatar */
+.brandAvatar {
+    object-fit: cover;
+    background: var(--panel2);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--bg) 70%, transparent);
+}
+
+/* Brand group layout */
+.brandGroup {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.brandName {
+    font-weight: 900;
+    letter-spacing: -0.2px;
+    font-size: 14px;
+    color: var(--text);
+}
+
+.brandName:hover {
+    text-decoration: none;
+    opacity: 0.95;
+}
+
+/* Bigger clickable avatar */
+.brandAvatarBtn {
+    border: 0;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    line-height: 0;
+    border-radius: 999px;
+}
+
+.brandAvatarBtn:disabled {
+    cursor: default;
+}
+
+.brandAvatar,
+.brandMark {
+    width: 44px;
+    /* ✅ bigger */
+    height: 44px;
+    border-radius: 999px;
+    /* ✅ circle */
+    border: 1px solid var(--border);
+    flex: 0 0 auto;
+    display: block;
+}
+
+/* If image */
+.brandAvatar {
+    object-fit: cover;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--bg) 70%, transparent);
+}
+
+.brandAvatarBtn:hover .brandAvatar,
+.brandAvatarBtn:hover .brandMark {
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+
+/* Existing fallback mark look */
+.brandMark {
+    background: radial-gradient(circle at 30% 30%,
+            rgba(124, 92, 255, 0.85),
+            rgba(76, 196, 255, 0.5));
+}
+
+/* Avatar modal */
+.avatarOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    background: rgba(0, 0, 0, 0.68);
+}
+
+.avatarModal {
+    position: relative;
+    width: min(520px, 92vw);
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--bg) 35%, var(--glass));
+    box-shadow: var(--shadow-xl);
+    backdrop-filter: blur(12px);
+    padding: 14px;
+}
+
+.avatarModalImg {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+}
+
+.avatarClose {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+}
+
+.avatarClose:hover {
+    background: var(--panel2);
+    color: var(--text);
 }
 
 .brandText {
